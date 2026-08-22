@@ -106,10 +106,9 @@
   .pts{font-size:21px;color:var(--sun-bright);font-weight:700;white-space:nowrap}
   .pts small{font-size:11px;color:var(--sand-dim);font-weight:400;display:block;text-align:right}
   .empty{text-align:center;color:var(--sand-dim);font-style:italic;padding:22px;font-size:14px;line-height:1.5}
-  .bal{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid var(--line)}
-  .bal:last-child{border-bottom:none}
+  .bal{display:flex;justify-content:space-between;align-items:center;padding:11px 0}
   .bal .lbl{font-size:15px;color:var(--sand)}
-  .bal .num{font-size:22px;font-weight:700;color:var(--sun-bright)}
+  .bal .num{font-size:22px;font-weight:700;color:var(--sand)}
   .bal .num.zero{color:var(--sand-dim)}
   details.yr{margin:0 0 8px}
   details.yr>summary{list-style:none;cursor:pointer;display:flex;align-items:baseline;gap:8px;padding:12px 0 6px;color:var(--sea-bright);font-weight:700;font-size:18px;letter-spacing:.3px;user-select:none}
@@ -117,7 +116,7 @@
   details.yr>summary .yr-caret{font-size:12px;transition:transform .2s;color:var(--sea)}
   details.yr[open]>summary .yr-caret{transform:rotate(90deg)}
   details.yr>summary .yr-warn{color:var(--coral-bright);font-size:14px}
-  details.yr>summary .yr-total{margin-left:auto;font-size:16px;font-weight:700;color:var(--sun-bright);white-space:nowrap}
+  details.yr>summary .yr-total{margin-left:auto;font-size:22px;font-weight:700;color:var(--sun-bright);white-space:nowrap}
   details.yr>summary .yr-total small{font-size:11px;color:var(--sand-dim);font-weight:400}
   .yr-body{padding-top:2px}
   .plans-head{font-family:var(--sans);font-size:20px;font-weight:700;color:var(--sea-bright);margin:24px 4px 12px;letter-spacing:.2px}
@@ -415,7 +414,7 @@ function delBooking(bid){const grp=db.trips.filter(t=>(t.bid||t.id)===bid);if(!g
 function availFor(cId,uy){let n=0;db.allots.filter(a=>a.contractId===cId&&+a.uy===+uy).forEach(a=>n+=+a.points);db.moves.filter(m=>m.contractId===cId).forEach(m=>{if(+m.to===+uy)n+=+m.points;if(+m.from===+uy)n-=+m.points;});db.trips.filter(t=>t.contractId===cId&&+t.uy===+uy).forEach(t=>n-=+t.points);return n;}
 function allUseYears(){const s=new Set();db.allots.forEach(a=>s.add(+a.uy));db.moves.forEach(m=>{s.add(+m.from);s.add(+m.to);});db.trips.forEach(t=>s.add(+t.uy));return [...s].sort();}
 
-function renderBalances(){const el=document.getElementById('balance-out');const uys=allUseYears();if(!db.contracts.length){el.innerHTML='<div class="empty">Add a contract first (Contracts tab), then tap "Set up / edit points" below to enter your starting balances.</div>';return;}if(!uys.length){el.innerHTML='<div class="empty">No points yet. Tap "Set up / edit points" below to enter what your DVC dashboard shows.</div>';return;}let html='';uys.forEach(uy=>{const yrTotal=db.contracts.reduce((s,c)=>s+availFor(c.id,uy),0);let rows='',hasWarn=false;db.contracts.forEach(c=>{const a=availFor(c.id,uy);const bankedIn=db.moves.filter(m=>m.contractId===c.id&&m.type==='bank'&&+m.to===uy).reduce((s,m)=>s+ +m.points,0);const borrowedIn=db.moves.filter(m=>m.contractId===c.id&&m.type==='borrow'&&+m.to===uy).reduce((s,m)=>s+ +m.points,0);let flag='';if(bankedIn>0&&a>0){flag+=`<div class="deadline-flag">&#9888; includes ${Math.min(bankedIn,a)} banked pts — expire ${useYearEnd(c.uy,uy)}</div>`;hasWarn=true;}if(borrowedIn>0&&a>0){flag+=`<div class="deadline-flag">&#9888; includes ${Math.min(borrowedIn,a)} borrowed pts — use by ${useYearEnd(c.uy,uy)}, can't be returned</div>`;hasWarn=true;}rows+=`<div class="bal"><div><div class="lbl">${esc(c.resort)}</div>${flag}</div><div class="num ${a===0?'zero':''}">${a}</div></div>`;});html+=`<details class="yr"><summary><span class="yr-caret">&#9656;</span><span>${uy} Use Year</span>${hasWarn?'<span class="yr-warn">&#9888;</span>':''}<span class="yr-total">${yrTotal}<small> pts</small></span></summary><div class="yr-body">${rows}</div></details>`;});el.innerHTML=html;}
+function renderBalances(){const el=document.getElementById('balance-out');const uys=allUseYears();if(!db.contracts.length){el.innerHTML='<div class="empty">Add a contract first (Contracts tab), then tap "Set up / edit points" below to enter your starting balances.</div>';return;}if(!uys.length){el.innerHTML='<div class="empty">No points yet. Tap "Set up / edit points" below to enter what your DVC dashboard shows.</div>';return;}let html='';uys.forEach(uy=>{const yrTotal=db.contracts.reduce((s,c)=>s+availFor(c.id,uy),0);let rows='',hasWarn=false;db.contracts.forEach(c=>{const a=availFor(c.id,uy);const bankedIn=db.moves.filter(m=>m.contractId===c.id&&m.type==='bank'&&+m.to===uy).reduce((s,m)=>s+ +m.points,0);const borrowedIn=db.moves.filter(m=>m.contractId===c.id&&m.type==='borrow'&&+m.to===uy).reduce((s,m)=>s+ +m.points,0);let flag='';if(bankedIn>0&&a>0){flag+=`<div class="deadline-flag">&#9888; includes ${Math.min(bankedIn,a)} banked pts — expire ${useYearEnd(c.uy,uy)}</div>`;hasWarn=true;}if(borrowedIn>0&&a>0){flag+=`<div class="deadline-flag">&#9888; includes ${Math.min(borrowedIn,a)} borrowed pts — use by ${useYearEnd(c.uy,uy)}, can't be returned</div>`;hasWarn=true;}rows+=`<div class="bal"><div><div class="lbl">${esc(c.resort)}</div>${flag}</div><div class="num ${a===0?'zero':''}">${a}</div></div>`;});html+=`<details class="yr"><summary><span class="yr-caret">&#9656;</span><span>${uy} Use Year</span>${hasWarn?'<span class="yr-warn">&#9888;</span>':''}<span class="yr-total">${yrTotal}</span></summary><div class="yr-body">${rows}</div></details>`;});el.innerHTML=html;}
 
 function updatePlanHero(){const resort=val('p-resort');const photo=photoForResort(resort);const el=document.getElementById('plan-hero');if(!resort){el.innerHTML='';return;}if(photo)el.innerHTML=`<div class="hero"><img src="${photo}"><div class="cap"><h3>${esc(resort)}</h3></div></div>`;else el.innerHTML=`<div class="hero noimg">Add a photo to ${esc(resort)}'s contract to see it here</div>`;}
 
@@ -471,19 +470,24 @@ function updateViews(pre){pre=pre||'p';const chart=POINT_CHARTS[val(pre+'-resort
 /* resale-restricted resorts: only bookable with direct points or points whose home is that resort */
 const RESTRICTED=["riviera","disneyland hotel","fort wilderness","lakeshore"];
 function isRestricted(resort){const n=(resort||'').toLowerCase();return RESTRICTED.some(k=>n.includes(k));}
-function runVerdict(pre){pre=pre||'p';const resort=val(pre+'-resort'),cost=+val(pre+'-cost'),uy=+val(pre+'-uy');const out=document.getElementById(pre+'-verdict-out');if(!resort||!cost||!uy){out.innerHTML='<div class="verdict warn"><div class="vhead">Need more info</div><p>Pick a resort, enter the point cost, and choose the use year.</p></div>';return;}
+/* which use year a travel date falls into for a contract's use-year MONTH (e.g. an Oct-UY contract books Dec 3 2026 into its 2026 UY, but Sep 2026 into its 2025 UY) */
+function useYearForDate(uyMonth,dateStr){const s=UY_MONTH[uyMonth];if(!s||!dateStr)return null;const p=(''+dateStr).split('-');const yr=+p[0],mo=+p[1];if(!yr||!mo)return null;return mo>=s?yr:yr-1;}
+function uyOf(c,ci,fallback){const d=useYearForDate(c.uy,ci);return d==null?fallback:d;}
+function contractsUnaligned(){return [...new Set(db.contracts.filter(c=>!c.isTransfer).map(c=>c.uy))].length>1;}
+function runVerdict(pre){pre=pre||'p';const resort=val(pre+'-resort'),cost=+val(pre+'-cost'),uy=+val(pre+'-uy'),ci=val(pre+'-checkin');const out=document.getElementById(pre+'-verdict-out');if(!resort||!cost||!uy){out.innerHTML='<div class="verdict warn"><div class="vhead">Need more info</div><p>Pick a resort, enter the point cost, and choose the use year.</p></div>';return;}
   if(isRestricted(resort)&&!contractsCanBook(resort)){out.innerHTML=`<div class="verdict bad"><div class="vhead">&#9888; Can't book — resale restriction</div><p>${esc(resort)} opened after Jan 19 2019, so only Disney-direct or pre-2019 resale points can book it (post-2019 resale can only book its own home resort). None of your contracts qualify. Set a contract to "Direct" or "Resale pre-2019" on the Contracts tab if that's how it was bought.</p></div>`;return;}
   // auto-detect: do you own a contract at this resort?
   const ownHere=db.contracts.some(c=>c.resort.trim().toLowerCase()===resort.trim().toLowerCase());
   // home-resort points (this resort) vs other-resort points, for this use year
   let homePts=0,otherPts=0,otherDetail=[];
-  db.contracts.forEach(c=>{const a=availFor(c.id,uy);if(a<=0)return;const m=c.resort.trim().toLowerCase()===resort.trim().toLowerCase();if(m)homePts+=a;else{otherPts+=a;otherDetail.push(`${a} from ${c.resort}`);}});
+  db.contracts.forEach(c=>{const a=availFor(c.id,uyOf(c,ci,uy));if(a<=0)return;const m=c.resort.trim().toLowerCase()===resort.trim().toLowerCase();if(m)homePts+=a;else{otherPts+=a;otherDetail.push(`${a} from ${c.resort}`);}});
   const allPts=homePts+otherPts;
   // primary home contract (most points this UY) and how much we could borrow within it from next UY
   const homeCs=db.contracts.filter(c=>c.resort.trim().toLowerCase()===resort.trim().toLowerCase());
-  let primHome=null,primA=-1;homeCs.forEach(c=>{const a=availFor(c.id,uy);if(a>primA){primA=a;primHome=c;}});
+  let primHome=null,primA=-1;homeCs.forEach(c=>{const a=availFor(c.id,uyOf(c,ci,uy));if(a>primA){primA=a;primHome=c;}});
   const shortfall=Math.max(0,cost-homePts);
-  const borrowable=primHome?Math.max(0,availFor(primHome.id,uy+1)):0;
+  const primUy=primHome?uyOf(primHome,ci,uy):uy;
+  const borrowable=primHome?Math.max(0,availFor(primHome.id,primUy+1)):0;
   const borrowViable=ownHere&&shortfall>0&&borrowable>=shortfall;
   const combineViable=ownHere&&homePts<cost&&allPts>=cost;
   let cls,head,body,note='',buttons='';
@@ -516,7 +520,7 @@ function runVerdict(pre){pre=pre||'p';const resort=val(pre+'-resort'),cost=+val(
       buttons=btn('any','&#9989; Book this trip');
     } else {
       const sf=cost-allPts;
-      const srcOpts=db.contracts.map(c=>({c,b:Math.max(0,availFor(c.id,uy+1))})).filter(x=>x.b>0);
+      const srcOpts=db.contracts.map(c=>({c,b:Math.max(0,availFor(c.id,uyOf(c,ci,uy)+1))})).filter(x=>x.b>0);
       const singles=srcOpts.filter(x=>x.b>=sf);
       const totalBorrowable=srcOpts.reduce((s,x)=>s+x.b,0);
       if(singles.length||totalBorrowable>=sf){
@@ -546,29 +550,30 @@ function bookFromPlan(strategy,srcId,pre){pre=pre||'p';const resort=val(pre+'-re
   if(!ci){alert('Pick your check-in date before booking.');return;}
   if(co&&co<ci){alert('Check-out is before check-in — fix the dates.');return;}
   const dates=fmtDates(ci,co);
+  const cy=c=>uyOf(c,ci,uy);
   const isHome=c=>c.resort.trim().toLowerCase()===resort.trim().toLowerCase();
-  const homeCs=db.contracts.filter(isHome),otherCs=db.contracts.filter(c=>!isHome(c)).sort((a,b)=>availFor(b.id,uy)-availFor(a.id,uy));
+  const homeCs=db.contracts.filter(isHome),otherCs=db.contracts.filter(c=>!isHome(c)).sort((a,b)=>availFor(b.id,cy(b))-availFor(a.id,cy(a)));
   if(strategy==='borrow'){
-    let primHome=null,primA=-1;homeCs.forEach(c=>{const a=availFor(c.id,uy);if(a>primA){primA=a;primHome=c;}});
-    const homePts=homeCs.reduce((s,c)=>s+Math.max(0,availFor(c.id,uy)),0);const shortfall=Math.max(0,cost-homePts);
+    let primHome=null,primA=-1;homeCs.forEach(c=>{const a=availFor(c.id,cy(c));if(a>primA){primA=a;primHome=c;}});
+    const homePts=homeCs.reduce((s,c)=>s+Math.max(0,availFor(c.id,cy(c))),0);const shortfall=Math.max(0,cost-homePts);
     if(!primHome){alert('No home contract found for this resort.');return;}
-    const borrowable=Math.max(0,availFor(primHome.id,uy+1));
-    if(borrowable<shortfall){alert(`Can't borrow enough from ${uy+1} — only ${borrowable} there.`);return;}
-    if(shortfall>0)db.moves.push({id:uid(),contractId:primHome.id,type:'borrow',from:uy+1,to:uy,points:shortfall});
+    const pcy=cy(primHome);const borrowable=Math.max(0,availFor(primHome.id,pcy+1));
+    if(borrowable<shortfall){alert(`Can't borrow enough from ${pcy+1} — only ${borrowable} there.`);return;}
+    if(shortfall>0)db.moves.push({id:uid(),contractId:primHome.id,type:'borrow',from:pcy+1,to:pcy,points:shortfall});
   } else if(strategy==='anyborrow'){
-    const haveNow=db.contracts.reduce((s,c)=>s+Math.max(0,availFor(c.id,uy)),0);let rem=Math.max(0,cost-haveNow);
-    const src=(srcId&&srcId!=='*')?db.contracts.filter(c=>c.id===srcId):db.contracts.slice().sort((a,b)=>availFor(b.id,uy+1)-availFor(a.id,uy+1));
-    for(const c of src){if(rem<=0)break;const b=Math.max(0,availFor(c.id,uy+1));if(b<=0)continue;const take=Math.min(b,rem);db.moves.push({id:uid(),contractId:c.id,type:'borrow',from:uy+1,to:uy,points:take});rem-=take;}
-    if(rem>0){alert(`Couldn't borrow enough from ${uy+1} — short ${rem}.`);return;}
+    const haveNow=db.contracts.reduce((s,c)=>s+Math.max(0,availFor(c.id,cy(c))),0);let rem=Math.max(0,cost-haveNow);
+    const src=(srcId&&srcId!=='*')?db.contracts.filter(c=>c.id===srcId):db.contracts.slice().sort((a,b)=>availFor(b.id,cy(b)+1)-availFor(a.id,cy(a)+1));
+    for(const c of src){if(rem<=0)break;const ny=cy(c)+1;const b=Math.max(0,availFor(c.id,ny));if(b<=0)continue;const take=Math.min(b,rem);db.moves.push({id:uid(),contractId:c.id,type:'borrow',from:ny,to:cy(c),points:take});rem-=take;}
+    if(rem>0){alert(`Couldn't borrow enough — short ${rem}.`);return;}
   }
   let pool;
   if(strategy==='home'||strategy==='borrow')pool=homeCs;
   else if(strategy==='combine')pool=homeCs.concat(otherCs);
-  else pool=db.contracts.slice().sort((a,b)=>availFor(b.id,uy)-availFor(a.id,uy));
+  else pool=db.contracts.slice().sort((a,b)=>availFor(b.id,cy(b))-availFor(a.id,cy(a)));
   const draws=[];let remaining=cost;
-  for(const c of pool){if(remaining<=0)break;const a=availFor(c.id,uy);if(a<=0)continue;const take=Math.min(a,remaining);draws.push({cId:c.id,pts:take});remaining-=take;}
-  if(remaining>0){alert(`Not enough available points in ${uy} — short ${remaining}. Adjust points and try again.`);return;}
-  const grpId=uid();draws.forEach(d=>db.trips.push({id:uid(),bid:grpId,resort,dates,start:ci,end:co,room,view,points:d.pts,uy,contractId:d.cId,photo:''}));
+  for(const c of pool){if(remaining<=0)break;const a=availFor(c.id,cy(c));if(a<=0)continue;const take=Math.min(a,remaining);draws.push({cId:c.id,pts:take,uy:cy(c)});remaining-=take;}
+  if(remaining>0){alert(`Not enough available points for these dates — short ${remaining}. Adjust points and try again.`);return;}
+  const grpId=uid();draws.forEach(d=>db.trips.push({id:uid(),bid:grpId,resort,dates,start:ci,end:co,room,view,points:d.pts,uy:d.uy,contractId:d.cId,photo:''}));
   if(confirmingWaitId){db.waits=(db.waits||[]).filter(w=>w.id!==confirmingWaitId);confirmingWaitId=null;}
   save();clear([pre+'-cost',pre+'-checkin',pre+'-checkout',pre+'-room',pre+'-view']);document.getElementById(pre+'-verdict-out').innerHTML='';renderAll();renderMovesList();
   document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
