@@ -461,7 +461,27 @@ function moveLabel(m){const c=contractById(m.contractId);const who=c?esc(c.resor
 function renderMovesList(){const el=document.getElementById('adjust-list');if(!el)return;if(!db.moves.length){el.innerHTML='<div class="hint" style="margin-top:16px">No bank or borrow moves yet.</div>';return;}const rows=db.moves.slice().sort((a,b)=>(a.to-b.to)||(a.from-b.from)).map(m=>`<div class="bal"><div class="lbl" style="font-size:13.5px">${moveLabel(m)}</div><button class="ghost" onclick="delMove('${m.id}')">Remove</button></div>`).join('');el.innerHTML='<div class="hint" style="margin-top:16px;margin-bottom:2px">Current bank / borrow moves &mdash; remove one to reverse it:</div>'+rows;}
 function delMove(id){if(!confirm('Remove this bank/borrow move? Balances will recalculate.'))return;db.moves=db.moves.filter(m=>m.id!==id);save();renderAll();renderMovesList();}
 function updateAdjustLabels(){const t=val('a-type');document.getElementById('a-from-lbl').textContent=t==='bank'?'From year':'From year (later)';document.getElementById('a-to-lbl').textContent=t==='bank'?'Into year (later)':'Into year (now)';}
-function saveAdjust(){const cId=val('a-contract'),type=val('a-type'),from=+val('a-from'),to=+val('a-to'),points=+val('a-points');if(!cId||!from||!to||!points){alert('Fill in contract, both years, and points.');return;}if(from===to){alert('Years must differ.');return;}db.moves.push({id:uid(),contractId:cId,type,from,to,points});save();clear(['a-from','a-to','a-points']);renderAll();renderMovesList();}
+/* banking deadline as a real Date (8 months into the use year) so it can be compared to today */
+function bankingDeadlineDate(m,y){const s=UY_MONTH[m];if(!s)return null;let mo=s+8,yy=y;if(mo>12){mo-=12;yy+=1;}return new Date(yy,mo-1,1);}
+/* points that ARRIVED in a use year by banking or borrowing are stuck there — DVC won't let them move a second time */
+function lockedIn(cId,uy){return db.moves.filter(m=>m.contractId===cId&&+m.to===+uy&&(m.type==='bank'||m.type==='borrow')).reduce((n,m)=>n+ +m.points,0);}
+function saveAdjust(){const cId=val('a-contract'),type=val('a-type'),from=+val('a-from'),to=+val('a-to'),points=+val('a-points');
+  if(!cId||!from||!to||!points){alert('Fill in contract, both years, and points.');return;}
+  if(from===to){alert('Years must differ.');return;}
+  if(type==='bank'&&to<from){alert('Banking moves points forward. The "into" year has to be later than the year they come from.');return;}
+  if(type==='borrow'&&to>from){alert('Borrowing pulls a later year into now. The "from" year has to be the later one.');return;}
+  const c=contractById(cId);
+  if(type==='bank'&&c){const d=bankingDeadlineDate(c.uy,from);
+    if(d&&new Date()>=d){alert('Too late to bank. The deadline for the '+from+' use year was '+bankingDeadline(c.uy,from)+'.');return;}}
+  /* borrowing pulls from next use year, which the user usually hasn't entered yet —
+     an untouched future year simply holds that contract's annual allotment */
+  const hasAllot=db.allots.some(a=>a.contractId===cId&&+a.uy===+from);
+  const implied=(type==='borrow'&&!hasAllot&&c)?(+c.points||0):0;
+  const locked=lockedIn(cId,from),eligible=Math.max(0,availFor(cId,from)+implied-locked);
+  if(points>eligible){alert(locked>0
+    ?'Only '+eligible+' points can move out of '+from+'. '+locked+' of that year\'s points got there by banking or borrowing, and those can\'t move again.'
+    :'Only '+eligible+' points are available in '+from+'.');return;}
+  db.moves.push({id:uid(),contractId:cId,type,from,to,points});save();clear(['a-from','a-to','a-points']);renderAll();renderMovesList();}
 function closeModal(id){document.getElementById(id).classList.remove('show');}
 
 /* ---- bookings ---- */
