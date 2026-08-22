@@ -145,6 +145,7 @@
   .deadline-flag{font-size:13px;color:var(--coral-bright);margin-top:6px;font-weight:600}
   .hint{font-size:12px;color:var(--sand-dim);font-style:italic;margin-top:6px;line-height:1.4}
   footer{text-align:center;color:var(--sand-dim);font-size:12px;margin-top:28px}
+  .build{display:block;margin-top:4px;font-size:10.5px;opacity:.5;letter-spacing:.4px}
   /* modal */
   .modal-bg{display:none;position:fixed;inset:0;background:rgba(5,12,16,.8);z-index:50;align-items:center;justify-content:center;padding:16px}
   .modal-bg.show{display:flex}
@@ -263,7 +264,7 @@
     </details>
   </section>
 
-  <footer>DVC Point Call</footer>
+  <footer>DVC Point Call <span class="build" id="build-stamp"></span></footer>
 </div>
 
 <!-- SETUP MODAL -->
@@ -375,6 +376,7 @@ function load(){try{const r=localStorage.getItem(KEY);if(r)db=JSON.parse(r);}cat
   let mig=false;const km={};db.trips.forEach(t=>{if(!t.bid){const k=(t.resort||'')+'|'+(t.dates||'')+'|'+t.uy;if(!km[k])km[k]=uid();t.bid=km[k];mig=true;}});if(mig)save();}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(db));}catch(e){alert('Could not save — storage may be full (photos use space).');}}
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+const BUILD='2026.08.22-3';  /* bump when shipping — shown in the footer so a stale cached copy is identifiable */
 const UY_MONTH={February:2,March:3,April:4,June:6,August:8,September:9,October:10,December:12};
 function bankingDeadline(m,y){const s=UY_MONTH[m];if(!s)return null;let mo=s+8,yy=y;if(mo>12){mo-=12;yy+=1;}const M=['January','February','March','April','May','June','July','August','September','October','November','December'];return M[mo-1]+' 1, '+yy;}
 function lastDay(m,y){return new Date(y,m,0).getDate();}
@@ -705,7 +707,8 @@ function refreshSelectors(){const resorts=[...new Set(db.contracts.map(c=>c.reso
   const trSel=document.getElementById('tr-resort');if(trSel){const cur=trSel.value;trSel.innerHTML=DVC_RESORTS.map(r=>`<option>${esc(r)}</option>`).join('');if(cur)trSel.value=cur;}
   const xc=document.getElementById('x-contract');if(xc){const cur=xc.value;xc.innerHTML=db.contracts.filter(c=>!c.isTransfer).map(c=>`<option value="${c.id}">${esc(c.name)} — ${esc(c.resort)}</option>`).join('');if(cur)xc.value=cur;}
   updateRooms('p');}
-function renderAll(){renderContracts();renderTrips();renderBalances();refreshSelectors();updatePlanHero();}
+function stampBuild(){const e=document.getElementById('build-stamp');if(e)e.textContent='build '+BUILD;}
+function renderAll(){stampBuild();renderContracts();renderTrips();renderBalances();refreshSelectors();updatePlanHero();}
 function exportData(){const blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='dvc-point-call-backup-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}
 function importData(inp){const f=inp.files&&inp.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{try{const d=JSON.parse(e.target.result);if(!d||typeof d!=='object')throw 0;['contracts','allots','moves','trips','waits'].forEach(k=>{if(!Array.isArray(d[k]))d[k]=[];});if(!confirm('Load this backup? It replaces what is currently in the app.')){inp.value='';return;}db=d;save();renderAll();alert('Backup loaded.');}catch(err){alert('That file is not a valid DVC Point Call backup.');}inp.value='';};r.readAsText(f);}
 function wipeAll(){const cur=localStorage.getItem(KEY);const typed=prompt('This erases ALL contracts, balances, and bookings on this device.\n\nType ERASE to confirm, or Cancel to keep your data:');if(typed==null)return;if(typed.trim().toUpperCase()!=='ERASE'){alert('Not erased — you did not type ERASE.');return;}if(cur)localStorage.setItem(KEY+'.bak',cur);db={contracts:[],allots:[],moves:[],trips:[],waits:[]};save();renderAll();['p-verdict-out','t-verdict-out'].forEach(id=>{const e=document.getElementById(id);if(e)e.innerHTML='';});alert('Data erased. If that was a mistake, tap "Undo last erase" to bring it back.');}
