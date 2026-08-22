@@ -1,0 +1,8 @@
+# Local tooling
+.claude/
+.DS_Store
+
+# Personal data exported from the app — never publish these
+dvc-import.json
+dvc-point-call-backup*.json
+*backup*.json
