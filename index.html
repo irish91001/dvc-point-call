@@ -295,6 +295,42 @@
   </div>
 </div>
 
+<div class="modal-bg" id="edit-modal">
+  <div class="modal">
+    <button class="x" onclick="closeModal('edit-modal')">&times;</button>
+    <h3>Edit contract</h3>
+    <div class="hint" style="margin-bottom:10px">Fix anything you mistyped. Your points, banking history and bookings for this contract all stay intact.</div>
+    <input type="hidden" id="e-id">
+    <div id="e-normal">
+      <label>Home resort</label><input type="text" id="e-resort" placeholder="e.g. Vero Beach">
+      <div class="row">
+        <div><label>Annual points</label><input type="number" id="e-points" min="0"></div>
+        <div><label>Dues $/point</label><input type="number" id="e-dues" step="0.01" min="0"></div>
+      </div>
+      <label>Nickname (optional &mdash; for two contracts at one resort)</label><input type="text" id="e-name">
+      <label>Use year (month points renew)</label>
+      <select id="e-uy"><option>February</option><option>March</option><option>April</option><option>June</option><option>August</option><option>September</option><option>October</option><option>December</option></select>
+      <label>Contract expires (year &mdash; DVC deeds end Jan 31)</label><input type="number" id="e-expires" min="2020" max="2070">
+      <label>How was this contract bought? (sets which resorts it can book)</label>
+      <select id="e-type"><option value="direct">Direct from Disney &mdash; books all resorts</option><option value="resale-pre">Resale, closed before Jan 19 2019 &mdash; books all resorts</option><option value="resale-post">Resale, closed on/after Jan 19 2019 &mdash; legacy resorts only</option></select>
+      <label>Replace resort photo (optional, stays on this device)</label>
+      <input type="file" id="e-photo" accept="image/*">
+      <div id="e-photo-has" style="display:none;margin-top:6px"><button class="ghost" onclick="clearEditPhoto()">Remove current photo</button></div>
+    </div>
+    <div id="e-transfer" style="display:none">
+      <label>Source resort (where the points came from)</label><input type="text" id="e-tresort">
+      <div class="row">
+        <div><label>Transferred points</label><input type="number" id="e-tpoints" min="0"></div>
+        <div><label>Year transferred in</label><input type="number" id="e-tyear" min="2020" max="2070"></div>
+      </div>
+      <label>Use year</label>
+      <select id="e-tuy"><option>February</option><option>March</option><option>April</option><option>June</option><option>August</option><option>September</option><option>October</option><option>December</option></select>
+    </div>
+    <button class="act" onclick="saveEditContract()">Save changes</button>
+  </div>
+</div>
+
+
 <script>
 const KEY='dvcPointCall.v3';
 const DVC_RESORTS=[
@@ -366,7 +402,7 @@ const RESORT_COLORS=[
   {match:'grand floridian',bd:'#d1414e',bg:'rgba(209,65,78,.07)'}
 ];
 function resortColor(name){const n=(name||'').toLowerCase();const hit=RESORT_COLORS.find(r=>n.includes(r.match));return hit?{bd:hit.bd,bg:hit.bg}:null;}
-function renderContracts(){const el=document.getElementById('contract-list');if(!db.contracts.length){el.innerHTML='<div class="empty">No contracts yet. Tap "Add a Contract" below to enter your deeds.</div>';return;}el.innerHTML=db.contracts.map((c,i)=>{const p=resortColor(c.resort)||CONTRACT_PALETTE[i%CONTRACT_PALETTE.length];if(c.isTransfer){const exp=useYearEnd(c.uy,c.transferYear||new Date().getFullYear());return `<div class="item" style="border-left-color:${p.bd};background:${p.bg}"><div class="left"><div><div class="name">${esc(c.resort)} <small style="opacity:.7">&middot; transfer</small></div><div class="meta">one-time transfer &middot; ${c.uy} use year${exp?` &middot; expires ${exp}`:''}</div><div class="meta">books ${esc(c.resort)} at 11 months &middot; bankable within this use year</div></div></div><div style="text-align:right"><div class="pts">${c.points}<small>transfer pts</small></div><button class="ghost" onclick="delContract('${c.id}')">Remove</button></div></div>`;}const dues=+c.duesPerPoint||0;const duesLine=dues>0?`<div class="meta">Dues: ${money(dues)}/point &times; ${c.points} pts = <b style="color:var(--sand)">${money(dues*c.points)}/yr</b> <button class="ghost duesbtn" onclick="setDues('${c.id}')">edit</button></div>`:`<div class="meta">Dues: <button class="ghost duesbtn" onclick="setDues('${c.id}')">+ add dues per point</button></div>`;return `<div class="item" style="border-left-color:${p.bd};background:${p.bg}"><div class="left">${c.photo?`<img class="thumb" src="${c.photo}">`:''}<div><div class="name">${esc(c.resort)} <small style="opacity:.75;font-weight:600">&mdash; ${ptypeShort(purchaseTypeOf(c))}</small> <button class="ghost duesbtn" onclick="toggleAccess('${c.id}')">change</button></div><div class="meta">Use Year: <b style="color:var(--sand)">${c.uy}</b></div><div class="meta">Banking Deadline: <b style="color:var(--sand)">${bankingDeadline(c.uy,new Date().getFullYear())}</b></div><div class="meta">Contract Expiration: ${c.expires?`Jan 31, ${c.expires}`:'&mdash;'}</div>${duesLine}</div></div><div style="text-align:right"><div class="pts">${c.points}<small>pts / yr</small></div><button class="ghost" onclick="delContract('${c.id}')">Remove</button></div></div>`;}).join('');}
+function renderContracts(){const el=document.getElementById('contract-list');if(!db.contracts.length){el.innerHTML='<div class="empty">No contracts yet. Tap "Add a Contract" below to enter your deeds.</div>';return;}el.innerHTML=db.contracts.map((c,i)=>{const p=resortColor(c.resort)||CONTRACT_PALETTE[i%CONTRACT_PALETTE.length];if(c.isTransfer){const exp=useYearEnd(c.uy,c.transferYear||new Date().getFullYear());return `<div class="item" style="border-left-color:${p.bd};background:${p.bg}"><div class="left"><div><div class="name">${esc(c.resort)} <small style="opacity:.7">&middot; transfer</small></div><div class="meta">one-time transfer &middot; ${c.uy} use year${exp?` &middot; expires ${exp}`:''}</div><div class="meta">books ${esc(c.resort)} at 11 months &middot; bankable within this use year</div></div></div><div style="text-align:right"><div class="pts">${c.points}<small>transfer pts</small></div><button class="ghost" onclick="openEditContract('${c.id}')">Edit</button> <button class="ghost" onclick="delContract('${c.id}')">Remove</button></div></div>`;}const dues=+c.duesPerPoint||0;const duesLine=dues>0?`<div class="meta">Dues: ${money(dues)}/point &times; ${c.points} pts = <b style="color:var(--sand)">${money(dues*c.points)}/yr</b> <button class="ghost duesbtn" onclick="setDues('${c.id}')">edit</button></div>`:`<div class="meta">Dues: <button class="ghost duesbtn" onclick="setDues('${c.id}')">+ add dues per point</button></div>`;return `<div class="item" style="border-left-color:${p.bd};background:${p.bg}"><div class="left">${c.photo?`<img class="thumb" src="${c.photo}">`:''}<div><div class="name">${esc(c.resort)} <small style="opacity:.75;font-weight:600">&mdash; ${ptypeShort(purchaseTypeOf(c))}</small> <button class="ghost duesbtn" onclick="toggleAccess('${c.id}')">change</button></div><div class="meta">Use Year: <b style="color:var(--sand)">${c.uy}</b></div><div class="meta">Banking Deadline: <b style="color:var(--sand)">${bankingDeadline(c.uy,new Date().getFullYear())}</b></div><div class="meta">Contract Expiration: ${c.expires?`Jan 31, ${c.expires}`:'&mdash;'}</div>${duesLine}</div></div><div style="text-align:right"><div class="pts">${c.points}<small>pts / yr</small></div><button class="ghost" onclick="openEditContract('${c.id}')">Edit</button> <button class="ghost" onclick="delContract('${c.id}')">Remove</button></div></div>`;}).join('');}
 function delContract(id){const c=contractById(id);const myTrips=db.trips.filter(t=>t.contractId===id);const n=myTrips.length;const label=c?(c.isTransfer?'these transferred points':esc(c.resort)):'this';let msg=`Remove ${label}? This clears its points and banking history.`;if(n>0)msg+=`\n\nHeads up: ${n} booking${n===1?'':'s'} draw${n===1?'s':''} on it. ${n===1?'That booking':'Those bookings'} will be removed too — cancel or transfer ${n===1?'it':'them'} with the sale if the buyer is taking the reservation.`;if(!confirm(msg))return;db.contracts=db.contracts.filter(c=>c.id!==id);db.allots=db.allots.filter(a=>a.contractId!==id);db.moves=db.moves.filter(m=>m.contractId!==id);db.trips=db.trips.filter(t=>t.contractId!==id);save();renderAll();if(typeof renderMovesList==='function')renderMovesList();}
 function addTransfer(){const points=+val('tr-points'),resort=val('tr-resort'),uym=val('tr-uy-m'),year=+val('tr-year'),ptype=val('tr-type')||'resale-pre';if(!points||!resort||!year){alert('Enter points received, the source resort, and the use year.');return;}const cid=uid();db.contracts.push({id:cid,name:resort+' (transfer)',resort,points,uy:uym,purchaseType:ptype,booksNew:ptype!=='resale-post',isTransfer:true,transferYear:year});db.allots.push({id:uid(),contractId:cid,uy:year,points,setup:true});save();clear(['tr-points','tr-year']);renderAll();}
 function addExchange(){const type=val('x-type'),note=val('x-note'),points=+val('x-cost'),uy=+val('x-uy'),cid=val('x-contract');if(!points||!uy||!cid){alert('Enter the points used, the use year, and which contract.');return;}const c=contractById(cid);const isInterval=/interval/i.test(type);if(c&&!isInterval&&purchaseTypeOf(c)!=='direct'){if(!confirm(`${type} normally requires Disney-direct points — resale points bought on or after March 21, 2011 can't be used for it. Log it anyway?`))return;}const avail=availFor(cid,uy);if(points>avail){if(!confirm(`That's more than the ${avail} points available on ${c?c.resort:'this contract'} in ${uy}. Log it anyway?`))return;}db.trips.push({id:uid(),bid:uid(),kind:'exchange',resort:type,note,points,uy,contractId:cid,start:'',end:'',room:'',view:'',photo:''});save();clear(['x-note','x-cost']);renderAll();}
@@ -382,6 +418,25 @@ function saveSetup(){const cId=val('s-contract'),uy=+val('s-uy'),points=+val('s-
   if(plain>0||banked===0)db.allots.push({id:uid(),contractId:cId,uy,points:plain<0?0:plain,setup:true});
   if(banked>0)db.moves.push({id:uid(),contractId:cId,type:'bank',from:uy-1,to:uy,points:banked,setup:true});
   save();clear(['s-uy','s-points','s-banked']);document.getElementById('s-hasbanked').checked=false;document.getElementById('s-banked-wrap').style.display='none';renderAll();renderSetupList();}
+let editPhotoCleared=false;
+function setV(id,v){const e=document.getElementById(id);if(e)e.value=(v===undefined||v===null?'':v);}
+function clearEditPhoto(){editPhotoCleared=true;document.getElementById('e-photo-has').style.display='none';}
+function openEditContract(id){const c=contractById(id);if(!c)return;editPhotoCleared=false;setV('e-id',id);const isT=!!c.isTransfer;
+document.getElementById('e-normal').style.display=isT?'none':'';
+document.getElementById('e-transfer').style.display=isT?'':'none';
+if(isT){setV('e-tresort',c.resort);setV('e-tpoints',c.points);setV('e-tyear',c.transferYear||'');setV('e-tuy',c.uy);}
+else{setV('e-resort',c.resort);setV('e-points',c.points);setV('e-dues',c.duesPerPoint||'');setV('e-name',c.name===c.resort?'':(c.name||''));setV('e-uy',c.uy);setV('e-expires',c.expires||'');setV('e-type',purchaseTypeOf(c));const f=document.getElementById('e-photo');if(f)f.value='';document.getElementById('e-photo-has').style.display=c.photo?'':'none';}
+document.getElementById('edit-modal').classList.add('show');}
+function saveEditContract(){const id=val('e-id');const c=contractById(id);if(!c){alert('That contract is no longer here.');return;}
+if(c.isTransfer){const resort=val('e-tresort');if(!resort){alert('Enter the source resort.');return;}const pts=+val('e-tpoints')||0;const ty=+val('e-tyear')||0;c.resort=resort;c.name=resort+' (transfer)';c.points=pts;c.uy=val('e-tuy');if(ty)c.transferYear=ty;
+const a=db.allots.find(x=>x.contractId===id&&x.setup);if(a){a.points=pts;if(ty)a.uy=ty;}
+save();closeModal('edit-modal');renderAll();if(typeof renderMovesList==='function')renderMovesList();return;}
+const resort=val('e-resort');if(!resort){alert('Enter a home resort.');return;}
+const nm=val('e-name')||resort,ptype=val('e-type')||'direct';
+const apply=(photo)=>{c.resort=resort;c.name=nm;c.points=+val('e-points')||0;c.duesPerPoint=+val('e-dues')||0;c.uy=val('e-uy');c.expires=+val('e-expires')||'';c.purchaseType=ptype;c.booksNew=ptype!=='resale-post';if(photo!==undefined)c.photo=photo;save();closeModal('edit-modal');renderAll();};
+const fileEl=document.getElementById('e-photo');
+if(fileEl&&fileEl.files&&fileEl.files[0])fileToDataURL(fileEl.files[0],apply);
+else apply(editPhotoCleared?'':undefined);}
 function renderSetupList(){const el=document.getElementById('setup-list');const rows=[];db.contracts.forEach(c=>{allUseYears().forEach(uy=>{const a=availFor(c.id,uy);if(db.allots.some(x=>x.contractId===c.id&&+x.uy===uy)||db.moves.some(x=>x.contractId===c.id&&(+x.to===uy||+x.from===uy)))rows.push(`<div class="bal"><div class="lbl">${esc(c.resort)} ${uy}</div><div class="num ${a===0?'zero':''}">${a}</div></div>`);});});el.innerHTML=rows.length?'<div class="hint">Current starting points:</div>'+rows.join(''):'';}
 
 /* ---- adjust (bank/borrow) ---- */
