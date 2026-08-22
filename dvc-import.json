@@ -1,0 +1,26 @@
+{
+  "contracts": [
+    { "id": "vero", "name": "Vero Beach", "resort": "Vero Beach", "points": 150, "uy": "February", "purchaseType": "resale-post", "booksNew": false, "duesPerPoint": 14.8939, "expires": 2042, "photo": "" },
+    { "id": "okw", "name": "Old Key West", "resort": "Old Key West", "points": 75, "uy": "February", "purchaseType": "resale-post", "booksNew": false, "duesPerPoint": 11.2054, "expires": 2042, "photo": "" }
+  ],
+  "allots": [
+    { "id": "a1", "contractId": "okw", "uy": 2026, "points": 29, "setup": true },
+    { "id": "a2", "contractId": "vero", "uy": 2027, "points": 106, "setup": true },
+    { "id": "a3", "contractId": "okw", "uy": 2027, "points": 75, "setup": true },
+    { "id": "a4", "contractId": "vero", "uy": 2028, "points": 150, "setup": true },
+    { "id": "a5", "contractId": "okw", "uy": 2028, "points": 75, "setup": true },
+    { "id": "a6", "contractId": "vero", "uy": 2029, "points": 150, "setup": true },
+    { "id": "a7", "contractId": "okw", "uy": 2029, "points": 75, "setup": true }
+  ],
+  "moves": [
+    { "id": "m1", "contractId": "vero", "type": "borrow", "from": 2028, "to": 2027, "points": 11 },
+    { "id": "m2", "contractId": "okw", "type": "borrow", "from": 2027, "to": 2026, "points": 64 },
+    { "id": "m3", "contractId": "okw", "type": "bank", "from": 2026, "to": 2027, "points": 21 }
+  ],
+  "trips": [
+    { "id": "t1", "bid": "b1", "resort": "Vero Beach", "dates": "May 27–30, 2027", "start": "2027-05-27", "end": "2027-05-30", "room": "2 Bedroom Lock-Off Villa", "points": 117, "uy": 2027, "contractId": "vero", "photo": "" }
+  ],
+  "waits": [
+    { "id": "w1", "resort": "Old Key West", "cost": 72, "uy": 2026, "dates": "Dec 3–5, 2026", "start": "2026-12-03", "end": "2026-12-05", "room": "2 Bedroom Villa" }
+  ]
+}
