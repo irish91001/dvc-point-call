@@ -79,7 +79,7 @@
   .hero.card .cap h3{color:#2b2016;text-shadow:0 1px 0 rgba(255,255,255,.45)}
   .hero.card .cap h3 .sec2{color:rgba(62,47,32,.8)}
   .hero.card .cap .hsub{color:#5c4a35;text-shadow:0 1px 2px rgba(255,252,244,.8)}
-  .hero::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(9,14,24,.06) 0%,rgba(9,14,24,.34) 48%,rgba(6,10,18,.88) 100%)}
+  .hero::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(9,14,24,0) 0%,rgba(9,14,24,.04) 42%,rgba(8,12,20,.5) 68%,rgba(6,10,18,.9) 100%)}
   .hero .cap{position:absolute;left:0;right:0;bottom:0;z-index:1;padding:0 22px 20px}
   .hero .cap .kick{display:flex;align-items:center;gap:9px;font-family:var(--sans);font-size:11.5px;letter-spacing:2.2px;text-transform:uppercase;color:var(--gold-bright);margin-bottom:9px;text-shadow:0 1px 6px rgba(0,0,0,.75)}
   .hero .cap .kick::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(232,200,116,.55),transparent)}
@@ -416,7 +416,7 @@ function load(){try{const r=localStorage.getItem(KEY);if(r)db=JSON.parse(r);}cat
   let mig=false;const km={};db.trips.forEach(t=>{if(!t.bid){const k=(t.resort||'')+'|'+(t.dates||'')+'|'+t.uy;if(!km[k])km[k]=uid();t.bid=km[k];mig=true;}});if(mig)save();}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(db));}catch(e){alert('Could not save — storage may be full (photos use space).');}}
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
-const BUILD='2026.11.20-7';  /* bump when shipping — shown in the footer so a stale cached copy is identifiable */
+const BUILD='2026.11.20-8';  /* bump when shipping — shown in the footer so a stale cached copy is identifiable */
 const UY_MONTH={February:2,March:3,April:4,June:6,August:8,September:9,October:10,December:12};
 function bankingDeadline(m,y){const s=UY_MONTH[m];if(!s)return null;let mo=s+8,yy=y;if(mo>12){mo-=12;yy+=1;}const M=['January','February','March','April','May','June','July','August','September','October','November','December'];return M[mo-1]+' 1, '+yy;}
 function lastDay(m,y){return new Date(y,m,0).getDate();}
