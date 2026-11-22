@@ -112,12 +112,34 @@
   .item .thumb{width:46px;height:46px;border-radius:6px;object-fit:cover;margin-right:10px;flex-shrink:0;border:1px solid var(--line)}.pstrip{display:flex;flex-wrap:wrap;gap:9px;margin-top:9px}.pstrip figure{position:relative;margin:0}.pstrip img{width:66px;height:50px;object-fit:cover;border-radius:5px;border:1px solid var(--line);display:block}.pstrip button{position:absolute;top:-7px;right:-7px;width:21px;height:21px;border-radius:50%;border:1px solid var(--line);background:var(--panel);color:var(--sand);font-size:13px;line-height:1;padding:0;cursor:pointer}
   .item .left{display:flex;align-items:center}
   .item .duesbtn{padding:0 7px;font-size:11px;font-weight:600;margin-left:6px;border-width:1px}
+
+  /* Vacation Plans: portrait cards, DVC-style */
+  #trip-list{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .pcard{position:relative;aspect-ratio:2/3;border-radius:15px;overflow:hidden;cursor:pointer;background:var(--panel);border:1px solid var(--line);box-shadow:0 3px 14px rgba(0,0,0,.45);transition:transform .16s,box-shadow .16s}
+  .pcard:hover{transform:translateY(-2px);box-shadow:0 7px 20px rgba(0,0,0,.55)}
+  .pcard.sel{outline:2px solid var(--gold);outline-offset:2px}
+  .pcard.wait{border-style:dashed}
+  .pcard .cimg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+  .pcard .cimg.pc{display:flex;flex-direction:column;background:linear-gradient(180deg,#f6eed9,#e7dabd)}
+  .pcard .pscene{width:100%;flex-shrink:0}
+  .pcard .pscene svg{width:100%;height:auto;display:block}
+  .pcard .pmark{flex:1;display:flex;align-items:center;justify-content:center;padding:10px 12px 34px}
+  .pcard .pmark svg{width:84%;height:auto;max-height:100%}
+  .pcard .cbadge{position:absolute;top:11px;left:11px;background:rgba(255,255,255,.95);border-radius:10px;padding:6px 9px 5px;text-align:center;min-width:50px;box-shadow:0 2px 8px rgba(0,0,0,.35)}
+  .pcard .cbadge b{display:block;font-family:var(--sans);font-size:20px;font-weight:800;color:#13243c;line-height:1.05}
+  .pcard .cbadge i{display:block;font-style:normal;font-family:var(--sans);font-size:9px;font-weight:700;letter-spacing:.3px;color:#44607f;margin-top:2px;text-transform:uppercase}
+  .pcard .cfoot{position:absolute;left:0;right:0;bottom:0;padding:26px 12px 11px;color:#fff;background:linear-gradient(180deg,rgba(6,10,18,0),rgba(6,10,18,.74) 46%,rgba(4,8,14,.94))}
+  .pcard .cdate{font-family:var(--sans);font-size:11.5px;font-weight:700;letter-spacing:.5px;color:#ffd9a3;text-transform:uppercase}
+  .pcard .cname{font-family:var(--sans);font-size:15.5px;font-weight:700;line-height:1.2;margin-top:3px}
+  .pcard .cmeta{font-family:var(--sans);font-size:12px;color:rgba(255,255,255,.72);margin-top:3px}
+  .tdetail{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--gold);border-radius:12px;padding:13px 14px 15px;margin-top:14px;box-shadow:0 2px 10px rgba(0,0,0,.4)}
+  .tdetail .dhead{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:9px}
+  .tdetail .ddate{font-family:var(--sans);font-size:18px;color:var(--sea-bright);font-weight:700}
+  .tdetail .dname{font-family:var(--sans);font-size:16px;color:var(--sand);font-weight:700;margin-top:2px}
+  @media(max-width:620px){#trip-list{grid-template-columns:repeat(2,1fr);gap:11px}.pcard .cname{font-size:14px}.pcard .cdate{font-size:10.5px}}
   /* expandable booking with mini-calendar */
   .book{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--gold);border-radius:12px;margin-bottom:12px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.4)}
   .book .left{display:flex;align-items:center;gap:6px}
-  .book .thumb{width:66px;height:46px;border-radius:6px;object-fit:cover;margin-right:8px;flex-shrink:0;border:1px solid var(--line)}
-  .book .thumb.art{display:block;overflow:hidden;background:#0d141d;padding:0}
-  .book .thumb.art svg{width:100%;height:100%;display:block}
   .book .bdate{font-family:var(--sans);font-size:19px;color:var(--sea-bright);font-weight:700;letter-spacing:.2px}
   .book .bresort{font-family:var(--sans);font-size:16.5px;color:var(--sand);font-weight:700;margin-top:3px}
   .book .bmeta{display:flex;flex-direction:column;align-items:flex-end;gap:5px;white-space:nowrap}
@@ -133,10 +155,6 @@
   .wbadge{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.5px;color:#8a5a00;background:rgba(230,170,70,.22);border:1px solid rgba(230,170,70,.55);border-radius:10px;padding:1px 7px;margin-left:6px;vertical-align:middle}
   .book-head{padding:12px 14px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;cursor:pointer}
   .book-head:hover{background:rgba(201,154,63,.09)}
-  .book-cal{display:none;padding:12px 14px 14px;border-top:1px solid var(--line)}
-  .book.open .book-cal{display:block}
-  .bcaret{display:inline-block;transition:transform .2s;color:var(--sea-bright);font-size:11px}
-  .book.open .bcaret{transform:rotate(90deg)}
   .cal{margin-top:8px}
   .cal .cmonth{font-size:13px;color:var(--sea-bright);font-weight:600;margin:10px 0 6px;text-align:center}
   .cal .cdow{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:2px}
@@ -218,6 +236,7 @@
     </div>
     <div class="plans-head">Vacation Plans</div>
     <div id="trip-list"></div>
+    <div id="trip-detail"></div>
   </section>
 
   <!-- PLAN -->
@@ -418,7 +437,7 @@ function load(){try{const r=localStorage.getItem(KEY);if(r)db=JSON.parse(r);}cat
   let mig=false;const km={};db.trips.forEach(t=>{if(!t.bid){const k=(t.resort||'')+'|'+(t.dates||'')+'|'+t.uy;if(!km[k])km[k]=uid();t.bid=km[k];mig=true;}});if(mig)save();}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(db));}catch(e){alert('Could not save — storage may be full (photos use space).');}}
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
-const BUILD='2026.11.22-2';  /* bump when shipping — shown in the footer so a stale cached copy is identifiable */
+const BUILD='2026.11.22-3';  /* bump when shipping — shown in the footer so a stale cached copy is identifiable */
 const UY_MONTH={February:2,March:3,April:4,June:6,August:8,September:9,October:10,December:12};
 function bankingDeadline(m,y){const s=UY_MONTH[m];if(!s)return null;let mo=s+8,yy=y;if(mo>12){mo-=12;yy+=1;}const M=['January','February','March','April','May','June','July','August','September','October','November','December'];return M[mo-1]+' 1, '+yy;}
 function lastDay(m,y){return new Date(y,m,0).getDate();}
@@ -548,7 +567,6 @@ function fmtDates(ci,co){const M=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug
 const MMAP={Jan:1,Feb:2,Mar:3,Apr:4,May:5,Jun:6,Jul:7,Aug:8,Sep:9,Oct:10,Nov:11,Dec:12};
 /* sortable check-in time for a trip: raw start date if saved, else parsed from the display string; undated sinks to bottom */
 function tripStart(t){if(t.start){const a=t.start.split('-');if(a.length===3)return new Date(+a[0],+a[1]-1,+a[2]).getTime();}const s=t.dates||'';const m=s.match(/([A-Z][a-z]{2})\s+(\d{1,2})/);if(m){const mo=MMAP[m[1]];const ym=s.match(/[A-Z][a-z]{2}\s+\d{1,2},\s*(\d{4})/);const yrs=s.match(/\d{4}/g);let y=ym?+ym[1]:(yrs?+yrs[yrs.length-1]:0);if(!y&&t.uy)y=+t.uy;if(mo&&y)return new Date(y,mo-1,+m[2]).getTime();}return Infinity;}
-function toggleBook(head){head.parentElement.classList.toggle('open');}
 function calMonth(year,month,sN,eN){const M=['January','February','March','April','May','June','July','August','September','October','November','December'];const dim=new Date(year,month,0).getDate();const first=new Date(year,month-1,1).getDay();let cells='';for(let i=0;i<first;i++)cells+='<div class="cd e"></div>';for(let d=1;d<=dim;d++){const n=year*10000+month*100+d;cells+=`<div class="cd${(n>=sN&&n<=eN)?' on':''}">${d}</div>`;}return `<div class="cmonth">${M[month-1]} ${year}</div><div class="cdow"><span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span></div><div class="cgrid">${cells}</div>`;}
 /* parse a stay's start/end out of the human date label when raw dates weren't saved; year falls back to use year */
 function parseDatesStr(s,uy){s=s||'';const D='[\\u2013\\u2014-]';let m;
@@ -570,20 +588,59 @@ let svgSeq=0;
    several thumbnails at once would repeat those ids in the document, so give each
    copy its own suffix. */
 function uniqSvg(svg){const n=++svgSeq;return svg.replace(/id="([^"]+)"/g,(m,id)=>`id="${id}_${n}"`).replace(/url\(#([^)]+)\)/g,(m,id)=>`url(#${id}_${n})`);}
-/* The thumbnail box is 66x46 — far squarer than the 2.5:1 hero — so a photo can
-   work in one and fail in the other. Old Key West is the case that forced this:
-   its sandcastle is portrait and shot from close in, so no wide slice of it reads,
-   but a crop cut for this box holds the whole castle. Such resorts keep the drawn
-   postcard on the hero and get their photo here. */
-const THUMB_PHOTOS={'old key west':'img/old-key-west-thumb.jpg'};
-function thumbPhoto(name){const n=(name||'').trim().toLowerCase();const k=Object.keys(THUMB_PHOTOS).find(k=>n.includes(k));return k?THUMB_PHOTOS[k]:'';}
-function thumbFor(resort,photo){const src=photo||thumbPhoto(resort);if(src)return `<img class="thumb" src="${src}">`;const a=artForResort(resort);return a?`<span class="thumb art">${uniqSvg(a.scene)}</span>`:'';}
-function renderTrips(){const el=document.getElementById('trip-list');const waits=(db.waits||[]).slice().sort((a,b)=>tripStart(a)-tripStart(b));if(!db.trips.length&&!waits.length){el.innerHTML='<div class="empty">No bookings yet.</div>';return;}
-  let html=waits.map(w=>{const p=resortColor(w.resort)||{bd:'#9bb0bd',bg:'rgba(155,176,189,.10)'};return `<div class="book wait" style="border-left-color:${p.bd};background:${p.bg}"><div class="book-head" onclick="toggleBook(this)"><div class="left">${thumbFor(w.resort,photoForResort(w.resort))}<span class="bcaret">&#9656;</span><div><div class="bdate">${esc(w.dates||'(no dates)')}</div><div class="bresort">${esc(w.resort)}</div></div></div><div class="bmeta"><span class="bstat pend">&#9679; Waitlisted</span><span class="bpts wpts">${w.cost}<small> pts</small></span></div></div><div class="book-cal"><div class="bdetail">${w.room?'<b>'+esc(w.room)+(w.view?' &middot; '+esc(w.view):'')+'</b> &middot; ':''}${w.uy} use year &middot; not committed yet</div>${buildCalendar(w)}<div class="brow"><button class="ghost" onclick="event.stopPropagation();confirmWait('${w.id}')">Confirm</button><button class="ghost" onclick="event.stopPropagation();releaseWait('${w.id}')">Release</button></div></div></div>`;}).join('');
+/* Vacation Plans are portrait cards: a photo of the resort or its drawn postcard,
+   a countdown badge, and the dates. Tapping one opens its detail below the grid
+   instead of expanding in place, so a long list stays scannable.
+   Card art is 2:3 — a third crop of the same photos, because the booking hero is
+   2.5:1 and neither shape suits the other. */
+const CARD_PHOTOS={'polynesian villas':'img/card-polynesian.jpg',
+'boardwalk':'img/card-boardwalk.jpg',
+'old key west':'img/card-old-key-west.jpg',
+'hilton head':'img/card-hilton-head.jpg',
+'vero beach':'img/card-vero-beach.jpg'};
+function cardPhoto(name){const n=(name||'').trim().toLowerCase();const k=Object.keys(CARD_PHOTOS).find(k=>n.includes(k));return k?CARD_PHOTOS[k]:'';}
+/* No photo for this resort: lay the drawn postcard out as one — scene on top,
+   postmark on the paper below — because the scene alone is 8:3 and would slice
+   to a sliver in a portrait card. */
+function cardArt(resort){const ph=cardPhoto(resort);if(ph)return `<img class="cimg" src="${ph}" alt="">`;
+  const a=artForResort(resort);if(!a)return '<div class="cimg pc"></div>';
+  return `<div class="cimg pc"><div class="pscene">${uniqSvg(a.scene)}</div><div class="pmark">${uniqSvg(a.mark)}</div></div>`;}
+/* Days until check-in, or where the stay sits once it has started or passed. */
+function countdown(start,end){const p=s=>{const a=(s||'').split('-');return a.length===3?new Date(+a[0],+a[1]-1,+a[2]):null;};
+  const A=p(start);if(!A)return null;const B=p(end)||A;
+  const t=new Date(),today=new Date(t.getFullYear(),t.getMonth(),t.getDate());
+  const d=Math.round((A-today)/864e5);
+  if(d>0)return {n:d,sub:d===1?'Day to Go':'Days to Go'};
+  if(d===0)return {n:'Today',sub:'Check-in'};
+  if(B>=today)return {n:'Now',sub:'You’re there'};
+  return {n:'✓',sub:'Stayed'};}
+let openPlanKey=null;
+function selectPlan(key){openPlanKey=(openPlanKey===key?null:key);renderTrips();
+  if(openPlanKey){const d=document.getElementById('trip-detail');if(d&&d.firstChild)d.scrollIntoView({behavior:'smooth',block:'nearest'});}}
+function planCard(o){const c=countdown(o.start,o.end);
+  const badge=c?`<div class="cbadge"><b>${c.n}</b><i>${c.sub}</i></div>`:'';
+  return `<div class="pcard${openPlanKey===o.key?' sel':''}${o.wait?' wait':''}" onclick="selectPlan('${o.key}')">${cardArt(o.resort)}${badge}<div class="cfoot"><div class="cdate">${esc(o.dates||'No dates')}</div><div class="cname">${esc(o.resort)}</div><div class="cmeta">${o.wait?'Waitlisted':'Booked'} &middot; ${o.pts} pts</div></div></div>`;}
+function exchangeRow(g,b){const c=contractById(g[0].contractId);const fromc=c?' &middot; from '+esc(c.name):'';
+  const total=g.reduce((s,t)=>s+ +t.points,0);
+  const xi=db.contracts.findIndex(x=>x.id===g[0].contractId);const xp=CONTRACT_PALETTE[xi>=0?xi%CONTRACT_PALETTE.length:0];
+  return `<div class="book" style="border-left-color:${xp.bd};background:${xp.bg}"><div class="book-head" style="cursor:default"><div class="left"><div><div class="bdate" style="font-size:16px">${esc(g[0].resort)}</div><div class="bresort" style="font-weight:400;font-size:13.5px;color:var(--sand-dim)">${g[0].note?esc(g[0].note)+' &middot; ':''}${g[0].uy} use year${fromc}</div></div></div><div class="bmeta"><span class="bstat" style="color:var(--sand-dim);font-size:13px">&#9679; Points used</span><span class="bpts">${total}<small> pts</small></span><button class="ghost" style="margin-top:4px" onclick="delBooking('${b}')">Remove</button></div></div></div>`;}
+function planDetail(groups,waits){if(!openPlanKey)return '';
+  if(openPlanKey.slice(0,2)==='w:'){const w=waits.find(x=>'w:'+x.id===openPlanKey);if(!w){openPlanKey=null;return '';}
+    return `<div class="tdetail"><div class="dhead"><div><div class="ddate">${esc(w.dates||'No dates')}</div><div class="dname">${esc(w.resort)}</div></div><button class="ghost" onclick="selectPlan('${openPlanKey}')">Close</button></div><div class="bdetail">${w.room?'<b>'+esc(w.room)+(w.view?' &middot; '+esc(w.view):'')+'</b> &middot; ':''}${w.cost} pts &middot; ${w.uy} use year &middot; not committed yet</div>${buildCalendar(w)}<div class="brow"><button class="ghost" onclick="confirmWait('${w.id}')">Confirm</button><button class="ghost" onclick="releaseWait('${w.id}')">Release</button></div></div>`;}
+  const b=openPlanKey.slice(2),g=groups[b];if(!g){openPlanKey=null;return '';}
+  const total=g.reduce((s,t)=>s+ +t.points,0),t0=g[0];
+  let from;if(g.length>1)from=' &middot; '+g.map(t=>{const c=contractById(t.contractId);return `${t.points} from ${c?esc(c.name):'?'}`;}).join(' + ');
+  else{const c=contractById(t0.contractId);from=c?' &middot; from '+esc(c.name):'';}
+  return `<div class="tdetail"><div class="dhead"><div><div class="ddate">${esc(t0.dates||'No dates')}</div><div class="dname">${esc(t0.resort)}</div></div><button class="ghost" onclick="selectPlan('${openPlanKey}')">Close</button></div><div class="bdetail">${t0.room?'<b>'+esc(t0.room)+(t0.view?' &middot; '+esc(t0.view):'')+'</b> &middot; ':''}${total} pts &middot; ${t0.uy} use year${from}</div>${buildCalendar(t0)}<div class="brow"><button class="ghost" onclick="delBooking('${b}')">Cancel booking</button></div></div>`;}
+function renderTrips(){const el=document.getElementById('trip-list'),dl=document.getElementById('trip-detail');
+  const waits=(db.waits||[]).slice().sort((a,b)=>tripStart(a)-tripStart(b));
   const groups={},order=[];db.trips.forEach(t=>{const b=t.bid||t.id;if(!groups[b]){groups[b]=[];order.push(b);}groups[b].push(t);});
-  order.sort((a,b)=>tripStart(groups[a][0])-tripStart(groups[b][0]));
-  html+=order.map(b=>{const g=groups[b];const total=g.reduce((s,t)=>s+ +t.points,0);if(g[0].kind==='exchange'){const c=contractById(g[0].contractId);const fromc=c?' &middot; from '+esc(c.name):'';const xi=db.contracts.findIndex(x=>x.id===g[0].contractId);const xp=CONTRACT_PALETTE[xi>=0?xi%CONTRACT_PALETTE.length:0];return `<div class="book" style="border-left-color:${xp.bd};background:${xp.bg}"><div class="book-head" style="cursor:default"><div class="left"><div><div class="bdate" style="font-size:16px">${esc(g[0].resort)}</div><div class="bresort" style="font-weight:400;font-size:13.5px;color:var(--sand-dim)">${g[0].note?esc(g[0].note)+' &middot; ':''}${g[0].uy} use year${fromc}</div></div></div><div class="bmeta"><span class="bstat" style="color:var(--sand-dim);font-size:13px">&#9679; Points used</span><span class="bpts">${total}<small> pts</small></span><button class="ghost" style="margin-top:4px" onclick="delBooking('${b}')">Remove</button></div></div></div>`;}const resort=g[0].resort,dates=g[0].dates,uy=g[0].uy;const ph=g.map(t=>t.photo).find(Boolean)||photoForResort(resort);const prim=g.slice().sort((a,b)=>b.points-a.points)[0];const ci=db.contracts.findIndex(x=>x.id===prim.contractId);const p=resortColor(resort)||CONTRACT_PALETTE[ci>=0?ci%CONTRACT_PALETTE.length:0];let from;if(g.length>1)from=' &middot; '+g.map(t=>{const c=contractById(t.contractId);return `${t.points} from ${c?esc(c.name):'?'}`;}).join(' + ');else{const c=contractById(g[0].contractId);from=c?' &middot; from '+esc(c.name):'';}return `<div class="book" style="border-left-color:${p.bd};background:${p.bg}"><div class="book-head" onclick="toggleBook(this)"><div class="left">${thumbFor(resort,ph)}<span class="bcaret">&#9656;</span><div><div class="bdate">${esc(dates||'(no dates)')}</div><div class="bresort">${esc(resort)}</div></div></div><div class="bmeta"><span class="bstat ok">&#10003; Booked</span><span class="bpts">${total}<small> pts</small></span></div></div><div class="book-cal"><div class="bdetail">${g[0].room?'<b>'+esc(g[0].room)+(g[0].view?' &middot; '+esc(g[0].view):'')+'</b> &middot; ':''}${uy} use year${from}</div>${buildCalendar(g[0])}<button class="ghost" onclick="event.stopPropagation();delBooking('${b}')">Cancel booking</button></div></div>`;}).join('');
-  el.innerHTML=html;}
+  const stays=order.filter(b=>groups[b][0].kind!=='exchange').sort((a,b)=>tripStart(groups[a][0])-tripStart(groups[b][0]));
+  const exch=order.filter(b=>groups[b][0].kind==='exchange');
+  if(!stays.length&&!waits.length&&!exch.length){el.innerHTML='<div class="empty">No bookings yet.</div>';if(dl)dl.innerHTML='';return;}
+  el.innerHTML=waits.map(w=>planCard({key:'w:'+w.id,resort:w.resort,dates:w.dates,start:w.start,end:w.end,pts:w.cost,wait:true})).join('')
+    +stays.map(b=>{const g=groups[b],t=g[0];return planCard({key:'t:'+b,resort:t.resort,dates:t.dates,start:t.start,end:t.end,pts:g.reduce((s,x)=>s+ +x.points,0)});}).join('');
+  if(dl)dl.innerHTML=planDetail(groups,waits)+exch.map(b=>exchangeRow(groups[b],b)).join('');}
 /* offer to send freed borrowed points back to their source year for a given contract + use year */
 function offerBorrowReturn(contractId,uy){const borrows=db.moves.filter(m=>m.contractId===contractId&&m.type==='borrow'&&+m.to===+uy);if(!borrows.length)return;const totalB=borrows.reduce((s,m)=>s+ +m.points,0);const avail=availFor(contractId,uy);const stuck=Math.max(0,Math.min(totalB,avail));if(stuck<=0)return;const fromYears=[...new Set(borrows.map(m=>+m.from))].sort((a,b)=>a-b).join(' & ');const c=contractById(contractId);const who=c?c.name+' — ':'';const end=c?useYearEnd(c.uy,uy):('the end of '+uy);alert(`${who}${stuck} of the returned point${stuck===1?'':'s'} were borrowed from ${fromYears}. DVC borrowing is final, so they can't go back to ${fromYears}. They stay in the ${uy} use year and must be used by ${end} — they can't be banked. (If you cancelled within 31 days of check-in, they become holding points, usable only for stays 60 days out or less.)`);}
 function delTrip(id){const t=db.trips.find(x=>x.id===id);if(!t)return;if(!confirm('Cancel this booking? Its points return to your balance.'))return;db.trips=db.trips.filter(x=>x.id!==id);offerBorrowReturn(t.contractId,t.uy);save();renderAll();renderMovesList();}
