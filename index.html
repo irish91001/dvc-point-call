@@ -123,6 +123,7 @@
   .pcard .cimg.pc{display:flex;flex-direction:column;background:linear-gradient(180deg,#f6eed9,#e7dabd)}
   .pcard .pscene{width:100%;flex-shrink:0}
   .pcard .pscene svg{width:100%;height:auto;display:block}
+  .pcard .pscene img{width:100%;height:auto;display:block}
   .pcard .pmark{flex:1;display:flex;align-items:center;justify-content:center;padding:10px 12px 34px}
   .pcard .pmark svg{width:84%;height:auto;max-height:100%}
   .pcard .cbadge{position:absolute;top:11px;left:11px;background:rgba(255,255,255,.95);border-radius:10px;padding:6px 9px 5px;text-align:center;min-width:50px;box-shadow:0 2px 8px rgba(0,0,0,.35)}
@@ -437,7 +438,7 @@ function load(){try{const r=localStorage.getItem(KEY);if(r)db=JSON.parse(r);}cat
   let mig=false;const km={};db.trips.forEach(t=>{if(!t.bid){const k=(t.resort||'')+'|'+(t.dates||'')+'|'+t.uy;if(!km[k])km[k]=uid();t.bid=km[k];mig=true;}});if(mig)save();}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(db));}catch(e){alert('Could not save — storage may be full (photos use space).');}}
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
-const BUILD='2026.11.22-3';  /* bump when shipping — shown in the footer so a stale cached copy is identifiable */
+const BUILD='2026.11.22-4';  /* bump when shipping — shown in the footer so a stale cached copy is identifiable */
 const UY_MONTH={February:2,March:3,April:4,June:6,August:8,September:9,October:10,December:12};
 function bankingDeadline(m,y){const s=UY_MONTH[m];if(!s)return null;let mo=s+8,yy=y;if(mo>12){mo-=12;yy+=1;}const M=['January','February','March','April','May','June','July','August','September','October','November','December'];return M[mo-1]+' 1, '+yy;}
 function lastDay(m,y){return new Date(y,m,0).getDate();}
@@ -473,7 +474,8 @@ const RESORT_PHOTOS={'polynesian villas':['img/polynesian.jpg'],
 'aulani':['img/aulani.jpg']};
 function photosOf(c){return c&&c.photos&&c.photos.length?c.photos:(c&&c.photo?[c.photo]:[]);}
 function builtinPhotos(name){const n=(name||'').trim().toLowerCase();const k=Object.keys(RESORT_PHOTOS).find(k=>n.includes(k));return k?RESORT_PHOTOS[k]:[];}
-function photosForResort(name){const key=(name||'').trim().toLowerCase();const c=db.contracts.find(c=>(c.resort||'').trim().toLowerCase()===key&&photosOf(c).length);return c?photosOf(c):builtinPhotos(name);}
+function contractPhotos(name){const key=(name||'').trim().toLowerCase();const c=db.contracts.find(c=>(c.resort||'').trim().toLowerCase()===key&&photosOf(c).length);return c?photosOf(c):[];}
+function photosForResort(name){const own=contractPhotos(name);return own.length?own:builtinPhotos(name);}
 function photoForResort(name){return photosForResort(name)[0]||'';}
 const CONTRACT_PALETTE=[{bd:'#5fb3bd',bg:'rgba(95,179,189,.10)'},{bd:'#f0c069',bg:'rgba(240,192,105,.10)'},{bd:'#8cc285',bg:'rgba(140,194,133,.10)'},{bd:'#e8856c',bg:'rgba(232,133,108,.10)'}];
 /* per-resort color overrides for bookings — matched on a keyword, wins over the contract color. Add more here anytime. */
@@ -602,8 +604,18 @@ function cardPhoto(name){const n=(name||'').trim().toLowerCase();const k=Object.
 /* No photo for this resort: lay the drawn postcard out as one — scene on top,
    postmark on the paper below — because the scene alone is 8:3 and would slice
    to a sliver in a portrait card. */
-function cardArt(resort){const ph=cardPhoto(resort);if(ph)return `<img class="cimg" src="${ph}" alt="">`;
-  const a=artForResort(resort);if(!a)return '<div class="cimg pc"></div>';
+function cardArt(resort){
+  const mine=contractPhotos(resort)[0];
+  if(mine)return `<img class="cimg" src="${mine}" alt="">`;
+  const ph=cardPhoto(resort);
+  if(ph)return `<img class="cimg" src="${ph}" alt="">`;
+  const a=artForResort(resort);
+  /* Only a wide photo survives for this resort and a 2:3 slice of it would throw
+     away the composition, so paste the photo onto the postcard where the drawing
+     would go and keep the frame whole. */
+  const wide=builtinPhotos(resort)[0];
+  if(wide)return `<div class="cimg pc"><div class="pscene"><img src="${wide}" alt=""></div>${a?`<div class="pmark">${uniqSvg(a.mark)}</div>`:''}</div>`;
+  if(!a)return '<div class="cimg pc"></div>';
   return `<div class="cimg pc"><div class="pscene">${uniqSvg(a.scene)}</div><div class="pmark">${uniqSvg(a.mark)}</div></div>`;}
 /* Days until check-in, or where the stay sits once it has started or passed. */
 function countdown(start,end){const p=s=>{const a=(s||'').split('-');return a.length===3?new Date(+a[0],+a[1]-1,+a[2]):null;};
