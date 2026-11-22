@@ -418,7 +418,7 @@ function load(){try{const r=localStorage.getItem(KEY);if(r)db=JSON.parse(r);}cat
   let mig=false;const km={};db.trips.forEach(t=>{if(!t.bid){const k=(t.resort||'')+'|'+(t.dates||'')+'|'+t.uy;if(!km[k])km[k]=uid();t.bid=km[k];mig=true;}});if(mig)save();}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(db));}catch(e){alert('Could not save — storage may be full (photos use space).');}}
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
-const BUILD='2026.11.22-1';  /* bump when shipping — shown in the footer so a stale cached copy is identifiable */
+const BUILD='2026.11.22-2';  /* bump when shipping — shown in the footer so a stale cached copy is identifiable */
 const UY_MONTH={February:2,March:3,April:4,June:6,August:8,September:9,October:10,December:12};
 function bankingDeadline(m,y){const s=UY_MONTH[m];if(!s)return null;let mo=s+8,yy=y;if(mo>12){mo-=12;yy+=1;}const M=['January','February','March','April','May','June','July','August','September','October','November','December'];return M[mo-1]+' 1, '+yy;}
 function lastDay(m,y){return new Date(y,m,0).getDate();}
@@ -570,7 +570,14 @@ let svgSeq=0;
    several thumbnails at once would repeat those ids in the document, so give each
    copy its own suffix. */
 function uniqSvg(svg){const n=++svgSeq;return svg.replace(/id="([^"]+)"/g,(m,id)=>`id="${id}_${n}"`).replace(/url\(#([^)]+)\)/g,(m,id)=>`url(#${id}_${n})`);}
-function thumbFor(resort,photo){if(photo)return `<img class="thumb" src="${photo}">`;const a=artForResort(resort);return a?`<span class="thumb art">${uniqSvg(a.scene)}</span>`:'';}
+/* The thumbnail box is 66x46 — far squarer than the 2.5:1 hero — so a photo can
+   work in one and fail in the other. Old Key West is the case that forced this:
+   its sandcastle is portrait and shot from close in, so no wide slice of it reads,
+   but a crop cut for this box holds the whole castle. Such resorts keep the drawn
+   postcard on the hero and get their photo here. */
+const THUMB_PHOTOS={'old key west':'img/old-key-west-thumb.jpg'};
+function thumbPhoto(name){const n=(name||'').trim().toLowerCase();const k=Object.keys(THUMB_PHOTOS).find(k=>n.includes(k));return k?THUMB_PHOTOS[k]:'';}
+function thumbFor(resort,photo){const src=photo||thumbPhoto(resort);if(src)return `<img class="thumb" src="${src}">`;const a=artForResort(resort);return a?`<span class="thumb art">${uniqSvg(a.scene)}</span>`:'';}
 function renderTrips(){const el=document.getElementById('trip-list');const waits=(db.waits||[]).slice().sort((a,b)=>tripStart(a)-tripStart(b));if(!db.trips.length&&!waits.length){el.innerHTML='<div class="empty">No bookings yet.</div>';return;}
   let html=waits.map(w=>{const p=resortColor(w.resort)||{bd:'#9bb0bd',bg:'rgba(155,176,189,.10)'};return `<div class="book wait" style="border-left-color:${p.bd};background:${p.bg}"><div class="book-head" onclick="toggleBook(this)"><div class="left">${thumbFor(w.resort,photoForResort(w.resort))}<span class="bcaret">&#9656;</span><div><div class="bdate">${esc(w.dates||'(no dates)')}</div><div class="bresort">${esc(w.resort)}</div></div></div><div class="bmeta"><span class="bstat pend">&#9679; Waitlisted</span><span class="bpts wpts">${w.cost}<small> pts</small></span></div></div><div class="book-cal"><div class="bdetail">${w.room?'<b>'+esc(w.room)+(w.view?' &middot; '+esc(w.view):'')+'</b> &middot; ':''}${w.uy} use year &middot; not committed yet</div>${buildCalendar(w)}<div class="brow"><button class="ghost" onclick="event.stopPropagation();confirmWait('${w.id}')">Confirm</button><button class="ghost" onclick="event.stopPropagation();releaseWait('${w.id}')">Release</button></div></div></div>`;}).join('');
   const groups={},order=[];db.trips.forEach(t=>{const b=t.bid||t.id;if(!groups[b]){groups[b]=[];order.push(b);}groups[b].push(t);});
