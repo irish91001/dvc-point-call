@@ -53,7 +53,7 @@
   details.addcard[open]>summary .chev{transform:rotate(45deg)}
   /* headline resort banner - tall photo, oversized name laid over it */
   .hero{position:relative;border-radius:12px;overflow:hidden;margin-bottom:16px;border:1px solid var(--line);background:var(--panel)}
-  .hero img{width:100%;height:270px;object-fit:cover;display:block}.hero .shots{position:relative;height:270px}.hero .shots img{position:absolute;inset:0;width:100%;height:100%;opacity:0;transition:opacity 1.1s ease-in-out}.hero .shots img.on{opacity:1}.hero .dots{position:absolute;right:14px;top:12px;z-index:2;display:flex;gap:5px}.hero .dots i{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.38);box-shadow:0 0 3px rgba(0,0,0,.55);transition:background .5s}.hero .dots i.on{background:rgba(255,255,255,.92)}@media(prefers-reduced-motion:reduce){.hero .shots img{transition:none}}
+  .hero img{width:100%;height:270px;object-fit:cover;display:block}.hero .shots{position:relative;height:270px}.hero .shots .shot{position:absolute;inset:0;opacity:0;transition:opacity 1.1s ease-in-out}.hero .shots .shot.on{opacity:1}.hero .shots .shot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.hero .shots .shot .bg{filter:blur(26px) brightness(.5) saturate(1.15);transform:scale(1.22)}.hero .shots .shot.whole .fg{object-fit:contain}.hero .dots{position:absolute;right:14px;top:12px;z-index:2;display:flex;gap:5px}.hero .dots i{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.38);box-shadow:0 0 3px rgba(0,0,0,.55);transition:background .5s}.hero .dots i.on{background:rgba(255,255,255,.92)}@media(prefers-reduced-motion:reduce){.hero .shots .shot{transition:none}}
   .hero .art{line-height:0}
   .hero .art svg{display:block;width:100%;height:270px}
   /* postcard variant: CSS paper frame, painted SVG scene, ink caption */
@@ -445,7 +445,7 @@ function load(){try{const r=localStorage.getItem(KEY);if(r)db=JSON.parse(r);}cat
   let mig=false;const km={};db.trips.forEach(t=>{if(!t.bid){const k=(t.resort||'')+'|'+(t.dates||'')+'|'+t.uy;if(!km[k])km[k]=uid();t.bid=km[k];mig=true;}});if(mig)save();}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(db));}catch(e){alert('Could not save — storage may be full (photos use space).');}}
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
-const BUILD='2026.11.22-7';  /* bump when shipping — shown in the footer so a stale cached copy is identifiable */
+const BUILD='2026.11.22-8';  /* bump when shipping — shown in the footer so a stale cached copy is identifiable */
 const UY_MONTH={February:2,March:3,April:4,June:6,August:8,September:9,October:10,December:12};
 function bankingDeadline(m,y){const s=UY_MONTH[m];if(!s)return null;let mo=s+8,yy=y;if(mo>12){mo-=12;yy+=1;}const M=['January','February','March','April','May','June','July','August','September','October','November','December'];return M[mo-1]+' 1, '+yy;}
 function lastDay(m,y){return new Date(y,m,0).getDate();}
@@ -480,6 +480,9 @@ const RESORT_PHOTOS={'polynesian villas':['img/polynesian.jpg'],
 'vero beach':['img/vero-beach.jpg','img/vero-slide.jpg','img/vero-lobby.jpg'],
 'aulani':['img/aulani.jpg']};
 function photosOf(c){return c&&c.photos&&c.photos.length?c.photos:(c&&c.photo?[c.photo]:[]);}
+/* Portrait photos the hero shows whole, letterboxed over a blurred copy of
+   themselves — cropping one to a wide band throws most of the picture away. */
+const FIT_WHOLE=new Set(['img/vero-slide.jpg']);
 function builtinPhotos(name){const n=(name||'').trim().toLowerCase();const k=Object.keys(RESORT_PHOTOS).find(k=>n.includes(k));return k?RESORT_PHOTOS[k]:[];}
 function contractPhotos(name){const key=(name||'').trim().toLowerCase();const c=db.contracts.find(c=>(c.resort||'').trim().toLowerCase()===key&&photosOf(c).length);return c?photosOf(c):[];}
 function photosForResort(name){const own=contractPhotos(name);return own.length?own:builtinPhotos(name);}
@@ -715,7 +718,7 @@ function stopShots(){if(shotTimer){clearInterval(shotTimer);shotTimer=null;}}
 /* Cross-fade a resort's photos. Only ever one timer, and it yields to a
    reduced-motion preference and to the tab being in the background. */
 function startShots(){stopShots();const host=document.querySelector('#plan-hero .shots');if(!host)return;
-  const imgs=[...host.querySelectorAll('img')];if(imgs.length<2)return;
+  const imgs=[...host.querySelectorAll(':scope > .shot')];if(imgs.length<2)return;
   if(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)return;
   const dots=[...document.querySelectorAll('#plan-hero .dots i')];let i=0;
   shotTimer=setInterval(()=>{if(document.hidden)return;
@@ -726,7 +729,7 @@ function updatePlanHero(){stopShots();const resort=val('p-resort');const el=docu
   const shots=photosForResort(resort),p=heroParts(resort),f=heroFacts(resort),col=resortColor(resort);
   const tc=p.main.length>26?' t3':(p.main.length>18?' t2':'');
   const cap=`<div class="cap"><div class="kick">${f.kick}</div><h3 class="hl${tc}">${esc(p.main)}${p.sub?`<span class="sec2">${esc(p.sub)}</span>`:''}</h3><div class="hsub">${f.line}</div></div>`;
-  if(shots.length){const imgs=shots.map((src,i)=>`<img src="${src}" alt="${esc(resort)}"${i?'':' class="on"'}>`).join('');const dots=shots.length>1?`<div class="dots">${shots.map((_,i)=>`<i${i?'':' class="on"'}></i>`).join('')}</div>`:'';el.innerHTML=`<div class="hero"><div class="shots">${imgs}</div>${dots}${cap}</div>`;startShots();return;}
+  if(shots.length){const imgs=shots.map((src,i)=>{const w=FIT_WHOLE.has(src);return `<div class="shot${w?' whole':''}${i?'':' on'}">${w?`<img class="bg" src="${src}" alt="" aria-hidden="true">`:''}<img class="fg" src="${src}" alt="${esc(resort)}"></div>`;}).join('');const dots=shots.length>1?`<div class="dots">${shots.map((_,i)=>`<i${i?'':' class="on"'}></i>`).join('')}</div>`:'';el.innerHTML=`<div class="hero"><div class="shots">${imgs}</div>${dots}${cap}</div>`;startShots();return;}
   const art=artForResort(resort);
   if(art){el.innerHTML=`<div class="hero card"><div class="art">${art.scene}<div class="stamp">${art.mark}</div></div>${cap}</div>`;return;}
   el.innerHTML=`<div class="hero nophoto"${col?` style="--acc:${col.bd}"`:''}>${cap}${f.owned?`<div class="phint">Add a photo to this resort's contract to see it here</div>`:''}</div>`;}
