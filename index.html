@@ -205,6 +205,10 @@
   .hint{font-size:12px;color:var(--sand-dim);font-style:italic;margin-top:6px;line-height:1.4}
   footer{text-align:center;color:var(--sand-dim);font-size:12px;margin-top:28px}
   .build{font-size:12px;opacity:.85;letter-spacing:.4px}.build::before{content:"\00b7";margin:0 6px;opacity:.55}.build:empty::before{content:none}
+  .nudge{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:rgba(201,154,63,.11);border:1px solid rgba(201,154,63,.45);border-left:4px solid var(--gold);border-radius:10px;padding:11px 13px;margin-bottom:14px}
+  .nudge .ntext{flex:1;min-width:210px;font-family:var(--sans);font-size:13.5px;color:var(--sand);line-height:1.45}
+  .nudge .ntext b{display:block;color:var(--sun-bright);font-size:14.5px;margin-bottom:2px}
+  .nudge .nbtn{margin:0;white-space:nowrap;flex-shrink:0;width:auto}
   /* modal */
   .modal-bg{display:none;position:fixed;inset:0;background:rgba(5,12,16,.8);z-index:50;align-items:center;justify-content:center;padding:16px}
   .modal-bg.show{display:flex}
@@ -227,6 +231,7 @@
 
   <!-- DASHBOARD -->
   <section class="panel active" id="dashboard">
+    <div id="backup-nudge"></div>
     <div class="winhost"></div>
     <div class="card">
       <h2>Vacation Points</h2>
@@ -316,6 +321,7 @@
     </details>
     <details class="card addcard">
       <summary><span class="chev">+</span>Backup &amp; data</summary>
+      <div class="hint" id="backup-status" style="margin:0 0 10px"></div>
       <button class="sec" onclick="exportData()">Export backup file</button>
       <label style="margin-top:12px">Restore from a backup file</label>
       <input type="file" id="import-file" accept="application/json,.json" onchange="importData(this)">
@@ -410,6 +416,7 @@
 
 <script>
 const KEY='dvcPointCall.v3';
+const EXPKEY=KEY+'.exported';  /* when the data was last written to a backup file, and what it looked like */
 const DVC_RESORTS=[
   "Animal Kingdom Villas — Jambo House",
   "Animal Kingdom Villas — Kidani Village",
@@ -438,7 +445,7 @@ function load(){try{const r=localStorage.getItem(KEY);if(r)db=JSON.parse(r);}cat
   let mig=false;const km={};db.trips.forEach(t=>{if(!t.bid){const k=(t.resort||'')+'|'+(t.dates||'')+'|'+t.uy;if(!km[k])km[k]=uid();t.bid=km[k];mig=true;}});if(mig)save();}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(db));}catch(e){alert('Could not save — storage may be full (photos use space).');}}
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
-const BUILD='2026.11.22-5';  /* bump when shipping — shown in the footer so a stale cached copy is identifiable */
+const BUILD='2026.11.22-6';  /* bump when shipping — shown in the footer so a stale cached copy is identifiable */
 const UY_MONTH={February:2,March:3,April:4,June:6,August:8,September:9,October:10,December:12};
 function bankingDeadline(m,y){const s=UY_MONTH[m];if(!s)return null;let mo=s+8,yy=y;if(mo>12){mo-=12;yy+=1;}const M=['January','February','March','April','May','June','July','August','September','October','November','December'];return M[mo-1]+' 1, '+yy;}
 function lastDay(m,y){return new Date(y,m,0).getDate();}
@@ -923,9 +930,30 @@ function renderWindows(){const hosts=document.querySelectorAll('.winhost');if(!h
     <div class="win home"><div class="wk">Book a home resort through</div><div class="wd">${fmtWin(w11)}</div><div class="wn">11 months out</div>${clamp}</div>
   </div><div class="winnote">The latest check-in dates you can reach booking today.</div>`;
   hosts.forEach(h=>h.innerHTML=html);}
-function renderAll(){stampBuild();renderContracts();renderTrips();renderBalances();refreshSelectors();updatePlanHero();renderWindows();}
-function exportData(){const blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='dvc-point-call-backup-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}
-function importData(inp){const f=inp.files&&inp.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{try{const d=JSON.parse(e.target.result);if(!d||typeof d!=='object')throw 0;['contracts','allots','moves','trips','waits'].forEach(k=>{if(!Array.isArray(d[k]))d[k]=[];});if(!confirm('Load this backup? It replaces what is currently in the app.')){inp.value='';return;}db=d;save();renderAll();alert('Backup loaded.');}catch(err){alert('That file is not a valid DVC Point Call backup.');}inp.value='';};r.readAsText(f);}
+/* There is no server, so the only copy of a member's contracts and bookings is
+   this browser. Clearing site data loses them, and Safari drops script-writable
+   storage for sites left alone for about a week. So keep a fingerprint of what
+   was last exported and say plainly when the file on disk has fallen behind. */
+function hashStr(str){let h=5381;for(let i=0;i<str.length;i++)h=((h<<5)+h+str.charCodeAt(i))|0;return (h>>>0).toString(36);}
+function dataSig(){return hashStr(JSON.stringify([db.contracts,db.allots,db.moves,db.trips,db.waits]));}
+function markBackedUp(){try{localStorage.setItem(EXPKEY,JSON.stringify({sig:dataSig(),at:Date.now()}));}catch(e){}renderBackup();}
+function backupRec(){try{return JSON.parse(localStorage.getItem(EXPKEY)||'null');}catch(e){return null;}}
+function agoWords(ms){const d=Math.floor((Date.now()-ms)/864e5);if(d<=0)return 'today';if(d===1)return 'yesterday';if(d<30)return d+' days ago';const m=Math.round(d/30);return m===1?'about a month ago':'about '+m+' months ago';}
+function backupState(){if(!db.contracts.length&&!db.trips.length)return {kind:'empty'};
+  const r=backupRec();if(!r||!r.sig)return {kind:'never'};
+  return r.sig===dataSig()?{kind:'ok',at:r.at}:{kind:'stale',at:r.at};}
+function renderBackup(){const st=backupState();
+  const bar=document.getElementById('backup-nudge');
+  if(bar)bar.innerHTML=(st.kind==='never'||st.kind==='stale')
+    ?`<div class="nudge"><div class="ntext"><b>${st.kind==='never'?'No backup yet':'Backup is out of date'}</b>${st.kind==='never'?'Your contracts and bookings are saved only in this browser. Export a file so a cleared cache or a new phone cannot take them with it.':'You have changed something since the backup you saved '+agoWords(st.at)+'.'}</div><button class="sec nbtn" onclick="exportData()">Export backup file</button></div>`
+    :'';
+  const line=document.getElementById('backup-status');
+  if(line)line.textContent=st.kind==='ok'?'Up to date — last exported '+agoWords(st.at)+'.'
+    :st.kind==='stale'?'Out of date — last exported '+agoWords(st.at)+'.'
+    :st.kind==='never'?'Never exported on this device.':'Nothing to back up yet.';}
+function renderAll(){stampBuild();renderContracts();renderTrips();renderBalances();refreshSelectors();updatePlanHero();renderWindows();renderBackup();}
+function exportData(){const blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='dvc-point-call-backup-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);markBackedUp();}
+function importData(inp){const f=inp.files&&inp.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{try{const d=JSON.parse(e.target.result);if(!d||typeof d!=='object')throw 0;['contracts','allots','moves','trips','waits'].forEach(k=>{if(!Array.isArray(d[k]))d[k]=[];});if(!confirm('Load this backup? It replaces what is currently in the app.')){inp.value='';return;}db=d;save();markBackedUp();renderAll();alert('Backup loaded.');}catch(err){alert('That file is not a valid DVC Point Call backup.');}inp.value='';};r.readAsText(f);}
 function wipeAll(){const cur=localStorage.getItem(KEY);const typed=prompt('This erases ALL contracts, balances, and bookings on this device.\n\nType ERASE to confirm, or Cancel to keep your data:');if(typed==null)return;if(typed.trim().toUpperCase()!=='ERASE'){alert('Not erased — you did not type ERASE.');return;}if(cur)localStorage.setItem(KEY+'.bak',cur);db={contracts:[],allots:[],moves:[],trips:[],waits:[]};save();renderAll();['p-verdict-out','t-verdict-out'].forEach(id=>{const e=document.getElementById(id);if(e)e.innerHTML='';});alert('Data erased. If that was a mistake, tap "Undo last erase" to bring it back.');}
 function undoErase(){const bak=localStorage.getItem(KEY+'.bak');if(!bak){alert('No backup found — nothing to undo.');return;}if(!confirm('Restore your data from the last erase?'))return;localStorage.setItem(KEY,bak);load();renderAll();alert('Restored from the last erase.');}
 load();renderAll();
