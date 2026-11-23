@@ -444,7 +444,7 @@ function load(){try{const r=localStorage.getItem(KEY);if(r)db=JSON.parse(r);}cat
   let mig=false;const km={};db.trips.forEach(t=>{if(!t.bid){const k=(t.resort||'')+'|'+(t.dates||'')+'|'+t.uy;if(!km[k])km[k]=uid();t.bid=km[k];mig=true;}});if(mig)save();}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(db));}catch(e){alert('Could not save — storage may be full (photos use space).');}}
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
-const BUILD='2026.11.22-17';  /* bump when shipping — shown in the footer so a stale cached copy is identifiable */
+const BUILD='2026.11.22-18';  /* bump when shipping — shown in the footer so a stale cached copy is identifiable */
 const UY_MONTH={February:2,March:3,April:4,June:6,August:8,September:9,October:10,December:12};
 function bankingDeadline(m,y){const s=UY_MONTH[m];if(!s)return null;let mo=s+8,yy=y;if(mo>12){mo-=12;yy+=1;}const M=['January','February','March','April','May','June','July','August','September','October','November','December'];return M[mo-1]+' 1, '+yy;}
 function lastDay(m,y){return new Date(y,m,0).getDate();}
@@ -977,7 +977,10 @@ function renderBackup(){const st=backupState();
     :st.kind==='stale'?'Out of date — last exported '+agoWords(st.at)+'.'
     :st.kind==='never'?'Never exported on this device.':'Nothing to back up yet.';}
 function renderAll(){stampBuild();renderContracts();renderTrips();renderBalances();refreshSelectors();updatePlanHero();renderWindows();renderBackup();}
-function exportData(){const blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='dvc-point-call-backup-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);markBackedUp();}
+/* Name the file by the calendar date where you are standing, not in UTC:
+   an evening export used to come out stamped with tomorrow. */
+function todayStamp(){const d=new Date(),p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());}
+function exportData(){const blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='dvc-point-call-backup-'+todayStamp()+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);markBackedUp();}
 function importData(inp){const f=inp.files&&inp.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{try{const d=JSON.parse(e.target.result);if(!d||typeof d!=='object')throw 0;['contracts','allots','moves','trips','waits'].forEach(k=>{if(!Array.isArray(d[k]))d[k]=[];});if(!confirm('Load this backup? It replaces what is currently in the app.')){inp.value='';return;}db=d;save();markBackedUp();renderAll();alert('Backup loaded.');}catch(err){alert('That file is not a valid DVC Point Call backup.');}inp.value='';};r.readAsText(f);}
 function wipeAll(){const cur=localStorage.getItem(KEY);const typed=prompt('This erases ALL contracts, balances, and bookings on this device.\n\nType ERASE to confirm, or Cancel to keep your data:');if(typed==null)return;if(typed.trim().toUpperCase()!=='ERASE'){alert('Not erased — you did not type ERASE.');return;}if(cur)localStorage.setItem(KEY+'.bak',cur);db={contracts:[],allots:[],moves:[],trips:[],waits:[]};save();renderAll();['p-verdict-out','t-verdict-out'].forEach(id=>{const e=document.getElementById(id);if(e)e.innerHTML='';});alert('Data erased. If that was a mistake, tap "Undo last erase" to bring it back.');}
 function undoErase(){const bak=localStorage.getItem(KEY+'.bak');if(!bak){alert('No backup found — nothing to undo.');return;}if(!confirm('Restore your data from the last erase?'))return;localStorage.setItem(KEY,bak);load();renderAll();alert('Restored from the last erase.');}
