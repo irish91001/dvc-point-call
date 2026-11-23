@@ -444,7 +444,7 @@ function load(){try{const r=localStorage.getItem(KEY);if(r)db=JSON.parse(r);}cat
   let mig=false;const km={};db.trips.forEach(t=>{if(!t.bid){const k=(t.resort||'')+'|'+(t.dates||'')+'|'+t.uy;if(!km[k])km[k]=uid();t.bid=km[k];mig=true;}});if(mig)save();}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(db));}catch(e){alert('Could not save — storage may be full (photos use space).');}}
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
-const BUILD='2026.11.22-16';  /* bump when shipping — shown in the footer so a stale cached copy is identifiable */
+const BUILD='2026.11.22-17';  /* bump when shipping — shown in the footer so a stale cached copy is identifiable */
 const UY_MONTH={February:2,March:3,April:4,June:6,August:8,September:9,October:10,December:12};
 function bankingDeadline(m,y){const s=UY_MONTH[m];if(!s)return null;let mo=s+8,yy=y;if(mo>12){mo-=12;yy+=1;}const M=['January','February','March','April','May','June','July','August','September','October','November','December'];return M[mo-1]+' 1, '+yy;}
 function lastDay(m,y){return new Date(y,m,0).getDate();}
@@ -680,6 +680,15 @@ function delBooking(bid){const grp=db.trips.filter(t=>(t.bid||t.id)===bid);if(!g
 
 /* ---- the live balance ---- */
 function availFor(cId,uy){let n=0;db.allots.filter(a=>a.contractId===cId&&+a.uy===+uy).forEach(a=>n+=+a.points);db.moves.filter(m=>m.contractId===cId).forEach(m=>{if(+m.to===+uy)n+=+m.points;if(+m.from===+uy)n-=+m.points;});db.trips.filter(t=>t.contractId===cId&&+t.uy===+uy).forEach(t=>n-=+t.points);return n;}
+/* A transfer is one pot of points, not a deed: it carries the source
+   contract's home resort and its 11-month window only while the points
+   last. Once they are spent, or their use year has run out, that resort
+   stops counting as one of yours. Owned contracts are always live. */
+function useYearEndDate(m,y){const s=UY_MONTH[m];if(!s)return null;let em=s-1;if(em<1)em=12;return new Date(y+1,em,0,23,59,59);}
+function transferLive(c){if(!c||!c.isTransfer)return true;
+  const yr=+c.transferYear||new Date().getFullYear();
+  if(availFor(c.id,yr)<=0)return false;
+  const end=useYearEndDate(c.uy,yr);return !end||new Date()<=end;}
 function allUseYears(){const s=new Set();db.allots.forEach(a=>s.add(+a.uy));db.moves.forEach(m=>{s.add(+m.from);s.add(+m.to);});db.trips.forEach(t=>s.add(+t.uy));return [...s].sort();}
 
 function renderBalances(){const el=document.getElementById('balance-out');const uys=allUseYears();if(!db.contracts.length){el.innerHTML='<div class="welcome"><div class="welcome-eyebrow">First time here</div><p class="welcome-lead">Know what your points can actually book &mdash; across use years, banking, borrowing, and resale rules &mdash; before you ever pick up the phone.</p><ol class="welcome-steps"><li><b>Add your contract.</b> Home resort, annual points, and the month your points renew.</li><li><b>Enter today\'s balance</b> straight from your DVC dashboard.</li><li><b>Check a stay</b> to see if it clears &mdash; and what it leaves behind.</li></ol><button class="act welcome-cta" onclick="startAddContract()">Add your first contract</button><div class="welcome-foot">Everything stays on this device. Nothing is uploaded, and there is no account to make.</div></div>';return;}if(!uys.length){el.innerHTML='<div class="empty">No points on file yet &mdash; add what your DVC dashboard shows and the math starts working.<div style="margin-top:14px"><button class="act welcome-cta" onclick="openSetup()">Enter my points</button></div></div>';return;}let html='';uys.forEach(uy=>{const yrTotal=db.contracts.reduce((s,c)=>s+availFor(c.id,uy),0);let rows='',hasWarn=false;db.contracts.forEach(c=>{const a=availFor(c.id,uy);const bankedIn=db.moves.filter(m=>m.contractId===c.id&&m.type==='bank'&&+m.to===uy).reduce((s,m)=>s+ +m.points,0);const borrowedIn=db.moves.filter(m=>m.contractId===c.id&&m.type==='borrow'&&+m.to===uy).reduce((s,m)=>s+ +m.points,0);let flag='';if(bankedIn>0&&a>0){flag+=`<div class="deadline-flag">&#9888; includes ${Math.min(bankedIn,a)} banked pts — expire ${useYearEnd(c.uy,uy)}</div>`;hasWarn=true;}if(borrowedIn>0&&a>0){flag+=`<div class="deadline-flag">&#9888; includes ${Math.min(borrowedIn,a)} borrowed pts — use by ${useYearEnd(c.uy,uy)}, can't be returned</div>`;hasWarn=true;}rows+=`<div class="bal"><div><div class="lbl">${esc(c.resort)}</div>${flag}</div><div class="num ${a===0?'zero':''}">${a}</div></div>`;});html+=`<details class="yr"><summary><span class="yr-caret">&#9656;</span><span>${uy} Use Year</span>${hasWarn?'<span class="yr-warn">&#9888;</span>':''}<span class="yr-total">${yrTotal}</span></summary><div class="yr-body">${rows}</div></details>`;});el.innerHTML=html;}
@@ -716,7 +725,7 @@ function heroParts(resort){let r=(resort||'').trim(),sub='';
   const tail=m.slice(1).join(' \u2014 ');
   return{main:m[0]||r,sub:[tail,sub].filter(Boolean).join(' \u2014 ')};}
 // what this resort means for booking: home resorts open at 11 months, everything else at 7
-function heroFacts(resort){const key=homeKey(resort);const owned=db.contracts.filter(c=>homeKey(c.resort)===key);
+function heroFacts(resort){const key=homeKey(resort);const owned=db.contracts.filter(c=>homeKey(c.resort)===key&&transferLive(c));
   if(!owned.length)return{kick:'7-month window',line:'Not a home resort \u2014 books at 7 months',owned:false};
   const annual=owned.filter(c=>!c.isTransfer);const pts=annual.reduce((s,c)=>s+(+c.points||0),0);
   const uys=[...new Set(annual.map(c=>c.uy).filter(Boolean))].join(' / ');
@@ -802,7 +811,7 @@ function contractsUnaligned(){return [...new Set(db.contracts.filter(c=>!c.isTra
 function runVerdict(pre){pre=pre||'p';const resort=val(pre+'-resort'),cost=+val(pre+'-cost'),uy=+val(pre+'-uy'),ci=val(pre+'-checkin');const out=document.getElementById(pre+'-verdict-out');if(!resort||!cost||!uy){out.innerHTML='<div class="verdict warn"><div class="vhead">Need more info</div><p>Pick a resort, enter the point cost, and choose the use year.</p></div>';return;}
   if(db.contracts.length&&isRestricted(resort)&&!contractsCanBook(resort)){out.innerHTML=`<div class="verdict bad"><div class="vhead">&#9888; Can't book — resale restriction</div><p>${esc(resort)} opened after Jan 19 2019, so only Disney-direct or pre-2019 resale points can book it (post-2019 resale can only book its own home resort). None of your contracts qualify. Set a contract to "Direct" or "Resale pre-2019" on the Contracts tab if that's how it was bought.</p></div>`;return;}
   // auto-detect: do you own a contract at this resort?
-  const ownHere=db.contracts.some(c=>homeKey(c.resort)===homeKey(resort));
+  const ownHere=db.contracts.some(c=>homeKey(c.resort)===homeKey(resort)&&transferLive(c));
   // home-resort points (this resort) vs other-resort points, for this use year
   let homePts=0,otherPts=0,otherDetail=[];
   db.contracts.forEach(c=>{const a=availFor(c.id,uyOf(c,ci,uy));if(a<=0)return;const m=homeKey(c.resort)===homeKey(resort);if(m)homePts+=a;else{otherPts+=a;otherDetail.push(`${a} from ${c.resort}`);}});
@@ -911,7 +920,7 @@ function clear(ids){ids.forEach(i=>{const e=document.getElementById(i);if(e)e.va
 function esc(s){return(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 
 function refreshModalSelectors(){const cOpts=db.contracts.map(c=>`<option value="${c.id}">${esc(c.name)} — ${esc(c.resort)}</option>`).join('');['s-contract','a-contract'].forEach(id=>{const e=document.getElementById(id);if(e)e.innerHTML=cOpts;});}
-function refreshSelectors(){const resorts=[...new Set(db.contracts.map(c=>c.resort))];const allResorts=[...new Set([...resorts,...db.trips.map(t=>t.resort)])];
+function refreshSelectors(){const resorts=[...new Set(db.contracts.filter(transferLive).map(c=>c.resort))];const allResorts=[...new Set([...resorts,...db.trips.map(t=>t.resort)])];
   // Build full dropdown: owned/booked resorts pinned at top, then the rest of the DVC lineup
   const owned=allResorts.slice();
   const rest=DVC_RESORTS.filter(r=>!owned.some(o=>o.toLowerCase()===r.toLowerCase()));
